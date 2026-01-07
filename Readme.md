@@ -30,19 +30,19 @@ https://www.youtube.com/watch?v=FYVbt6YFMsM
 	b. "docker exec -it db psql -U postgres"
 4. Run our backend server (locally)
 	a. Open a cmd from the "C:\source\software\fantasy_survivor\backend\src" directory
-	b. "cargo run"
+	b. "cargo build"
+	c. "cargo run"
 
 with postman, we can very that we can create, read, update, and destroy content in our database.
-  * Read values:
-    Get: http://127.0.0.1:8000/api/users
-  * 
+	* Read values:
+	Get: http://127.0.0.1:8000/api/users
 
 5. Build FE
 	C:\source\software\fantasy_survivor\frontend
-  * cargo build --target wasm32-unknown-unknown
+	* cargo build --target wasm32-unknown-unknown
 
 6. Start FE?
-  * trunk serve
+	* trunk serve
 
 
 
