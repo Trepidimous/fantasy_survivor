@@ -10,15 +10,20 @@ fn app() -> Html
 	let message = use_state(|| "".to_string());
 	let users = use_state(Vec::new);
 
-	let get_users = {
+	let get_users =
+	{
 		let users = users.clone();
 		let message = message.clone();
-		Callback::from(move |_| {
+		Callback::from(move |_|
+		{
 			let users = users.clone();
 			let message = message.clone();
-			spawn_local(async move {
-				match Request::get("http://127.0.0.1:8000/api/users").send().await {
-					Ok(resp) if resp.ok() => {
+			spawn_local(async move
+			{
+				match Request::get("http://127.0.0.1:8000/api/users").send().await
+				{
+					Ok(resp) if resp.ok() =>
+					{
 						let fetched_users: Vec<User> = resp.json().await.unwrap_or_default();
 						users.set(fetched_users);
 					}
@@ -29,17 +34,20 @@ fn app() -> Html
 		})
 	};
 
-	let create_user = {
+	let create_user =
+	{
 		let user_state = user_state.clone();
 		let message = message.clone();
 		let get_users = get_users.clone();
-		Callback::from(move |_| {
+		Callback::from(move |_|
+		{
 			let (name, email, _) = (*user_state).clone();
 			let user_state = user_state.clone();
 			let message = message.clone();
 			let get_users = get_users.clone();
 
-			spawn_local(async move {
+			spawn_local(async move
+			{
 				let user_data = serde_json::json!({ "name": name, "email": email });
 
 				let response = Request::post("http://127.0.0.1:8000/api/users")
@@ -47,8 +55,10 @@ fn app() -> Html
 					.body(user_data.to_string())
 					.send().await;
 
-				match response {
-					Ok(resp) if resp.ok() => {
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
 						message.set("User created successfully".into());
 						get_users.emit(());
 					}
@@ -61,26 +71,32 @@ fn app() -> Html
 		})
 	};
 
-	let update_user = {
+	let update_user =
+	{
 		let user_state = user_state.clone();
 		let message = message.clone();
 		let get_users = get_users.clone();
 
-		Callback::from(move |_| {
+		Callback::from(move |_|
+		{
 			let (name, email, editing_user_id) = (*user_state).clone();
 			let user_state = user_state.clone();
 			let message = message.clone();
 			let get_users = get_users.clone();
 
-			if let Some(id) = editing_user_id {
-				spawn_local(async move {
+			if let Some(id) = editing_user_id
+			{
+				spawn_local(async move
+				{
 					let response = Request::put(&format!("http://127.0.0.1:8000/api/users/{}", id))
 						.header("Content-Type", "application/json")
 						.body(serde_json::to_string(&(id, name.as_str(), email.as_str())).unwrap())
 						.send().await;
 
-					match response {
-						Ok(resp) if resp.ok() => {
+					match response
+					{
+						Ok(resp) if resp.ok() =>
+						{
 							message.set("User updated successfully".into());
 							get_users.emit(());
 						}
@@ -94,21 +110,26 @@ fn app() -> Html
 		})
 	};
 
-	let delete_user = {
+	let delete_user =
+	{
 		let message = message.clone();
 		let get_users = get_users.clone();
 
-		Callback::from(move |id: i32| {
+		Callback::from(move |id: i32|
+		{
 			let message = message.clone();
 			let get_users = get_users.clone();
 
-			spawn_local(async move {
+			spawn_local(async move
+			{
 				let response = Request::delete(
 					&format!("http://127.0.0.1:8000/api/users/{}", id)
 				).send().await;
 
-				match response {
-					Ok(resp) if resp.ok() => {
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
 						message.set("User deleted successfully".into());
 						get_users.emit(());
 					}
@@ -120,13 +141,14 @@ fn app() -> Html
 	};
 
 	let edit_user =
-{
+	{
 		let user_state = user_state.clone();
 		let users = users.clone();
 
-		Callback::from(move |id: i32| {
+		Callback::from(move |id: i32|
+		{
 			if let Some(user) = users.iter().find(|u| u.id == id)
-{
+			{
 				user_state.set((user.name.clone(), user.email.clone(), Some(id)));
 			}
 		})
@@ -141,9 +163,11 @@ fn app() -> Html
 					<input
 						placeholder="Name"
 						value={user_state.0.clone()}
-						oninput={Callback::from({
+						oninput={Callback::from(
+						{
 							let user_state = user_state.clone();
-							move |e: InputEvent| {
+							move |e: InputEvent|
+							{
 								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
 								user_state.set((input.value(), user_state.1.clone(), user_state.2));
 							}
@@ -153,9 +177,11 @@ fn app() -> Html
 					<input
 						placeholder="Email"
 						value={user_state.1.clone()}
-						oninput={Callback::from({
+						oninput={Callback::from(
+						{
 							let user_state = user_state.clone();
-							move |e: InputEvent| {
+							move |e: InputEvent|
+							{
 								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
 								user_state.set((user_state.0.clone(), input.value(), user_state.2));
 							}
@@ -164,42 +190,62 @@ fn app() -> Html
 					/>
 
 					<button
-						onclick={if user_state.2.is_some() { update_user.clone() } else { create_user.clone() }}
+						onclick=
+						{
+							if user_state.2.is_some()
+							{
+								update_user.clone()
+							}
+							else
+							{
+								create_user.clone()
+							}
+						}
 						class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
 					>
-						{ if user_state.2.is_some() { "Update User" } else { "Create User" } }
+						{ 
+							if user_state.2.is_some()
+							{
+								"Update User"
+							}
+							else
+							{ 
+								"Create User"
+							}
+						}
 						
 					</button>
-						if !message.is_empty() {
-						<p class="text-green-500 mt-2">{ &*message }</p>
-					}
+						if !message.is_empty()
+						{
+							<p class="text-green-500 mt-2">{ &*message }</p>
+						}
 				</div>
 
 				<button
-					onclick={get_users.reform(|_| ())}  
-					class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4"
-				>
+					onclick={get_users.reform(|_| ())}
+					class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
 					{ "Fetch User List" }
 				</button>
 
 				<h2 class="text-2xl font-bold text-gray-700 mb-2">{ "User List" }</h2>
 
 				<ul class="list-disc pl-5">
-					{ for (*users).iter().map(|user| {
+				{
+					for (*users).iter().map(|user|
+					{
 						let user_id = user.id;
-						html! {
+						html!
+						{
 							<li class="mb-2">
 								<span class="font-semibold">{ format!("ID: {}, Name: {}, Email: {}", user.id, user.name, user.email) }</span>
 								<button
 									onclick={delete_user.clone().reform(move |_| user_id)}
-									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
-								>
+									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
 									{ "Delete" }
 								</button>
 								<button
 									onclick={edit_user.clone().reform(move |_| user_id)}
-									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded"
-								>
+									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
 									{ "Edit" }
 								</button>
 							</li>

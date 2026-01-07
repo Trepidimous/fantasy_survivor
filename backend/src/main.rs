@@ -18,14 +18,14 @@ struct User
 async fn add_user(
 	conn: &State<Client>,
 	user: Json<User>
-) -> Result<Json<Vec<User>>, Custom<String>>
+	) -> Result<Json<Vec<User>>, Custom<String>>
 {
-execute_query(
-	conn,
-	"INSERT INTO users (name, email) VALUES ($1, $2)",
-	&[&user.name, &user.email]
-).await?;
-get_users(conn).await
+	execute_query(
+		conn,
+		"INSERT INTO users (name, email) VALUES ($1, $2)",
+		&[&user.name, &user.email]
+	).await?;
+	get_users(conn).await
 }
 
 #[get("/api/users")]
@@ -51,7 +51,7 @@ async fn update_user(
 	conn: &State<Client>,
 	id: i32,
 	user: Json<User>
-) -> Result<Json<Vec<User>>, Custom<String>>
+	) -> Result<Json<Vec<User>>, Custom<String>>
 {
 	execute_query(
 		conn,
@@ -72,7 +72,7 @@ async fn execute_query(
 	client: &Client,
 	query: &str,
 	params: &[&(dyn tokio_postgres::types::ToSql + Sync)]
-) -> Result<u64, Custom<String>>
+	) -> Result<u64, Custom<String>>
 {
 	client
 		.execute(query, params).await
@@ -86,8 +86,10 @@ async fn rocket() -> _
 		::connect("host=localhost user=postgres password=postgres dbname=postgres", NoTls).await
 		.expect("Failed to connect to Postgres");
 
-	tokio::spawn(async move {
-		if let Err(e) = connection.await {
+	tokio::spawn(async move
+	{
+		if let Err(e) = connection.await
+		{
 			eprintln!("Failed to connect to Postgres: {}", e);
 		}
 	});
@@ -114,4 +116,5 @@ async fn rocket() -> _
 		.manage(client)
 		.mount("/", routes![add_user, get_users, update_user, delete_user])
 		.attach(cors)
+
 }

@@ -44,6 +44,7 @@ with postman, we can very that we can create, read, update, and destroy content 
 6. Start FE?
 	* trunk serve
 
+7. Go to http://127.0.0.1:8080/
 
 
 
