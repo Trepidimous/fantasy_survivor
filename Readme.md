@@ -16,6 +16,9 @@ https://www.youtube.com/watch?v=FYVbt6YFMsM
 
 3. Install trunk --locked
 
+4. Setup FrontEnd
+	cargo new frontend --vcs none
+
 [How to Run]
 
 1. Start docker desktop
@@ -34,11 +37,13 @@ with postman, we can very that we can create, read, update, and destroy content 
     Get: http://127.0.0.1:8000/api/users
   * 
 
+5. Build FE
+	C:\source\software\fantasy_survivor\frontend
+  * cargo build --target wasm32-unknown-unknown
 
-cargo new frontend --vcs none
+6. Start FE?
+  * trunk serve
 
-
-Then open up a cmd and connect to the database via:
 
 
 
