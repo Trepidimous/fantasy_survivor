@@ -236,14 +236,14 @@ fn app() -> Html
 								<li class="mb-2">
 								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}, Email: {}", user.id, user.name, user.email) }</span>
 								<button
-									onclick={delete_user.clone().reform(move |_| user_id)}
-									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-									{ "Delete" }
-								</button>
-								<button
 									onclick={edit_user.clone().reform(move |_| user_id)}
 									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
 									{ "Edit" }
+								</button>
+								<button
+									onclick={delete_user.clone().reform(move |_| user_id)}
+									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+									{ "Delete" }
 								</button>
 							</li>
 						}
