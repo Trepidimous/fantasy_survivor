@@ -6,7 +6,7 @@ use wasm_bindgen_futures::spawn_local;
 #[function_component(App)]
 fn app() -> Html
 {
-	let user_state = use_state(|| ("".to_string(), "".to_string(), None as Option<i32>));
+	let user_state = use_state(|| ("".to_string(), "".to_string(), "".to_string(), None as Option<i32>));
 	let message = use_state(|| "".to_string());
 	let users = use_state(Vec::new);
 
@@ -41,15 +41,16 @@ fn app() -> Html
 		let get_users = get_users.clone();
 		Callback::from(move |_|
 		{
-			let (name, email, _) = (*user_state).clone();
+			let (name, email, _account_type, _) = (*user_state).clone();
 			let user_state = user_state.clone();
 			let message = message.clone();
 			let get_users = get_users.clone();
+			let account_type_in = "Developer"; // GameMaster, Admin, Player
+
 
 			spawn_local(async move
 			{
-				let user_data = serde_json::json!({ "name": name, "email": email });
-
+				let user_data = serde_json::json!({ "name": name, "email": email, "account_type" : account_type_in });
 				let response = Request::post("http://127.0.0.1:8000/api/users")
 					.header("Content-Type", "application/json")
 					.body(user_data.to_string())
@@ -66,7 +67,7 @@ fn app() -> Html
 					_ => message.set("Failed to create user".into()),
 				}
 
-				user_state.set(("".to_string(), "".to_string(), None));
+				user_state.set(("".to_string(), "".to_string(), "".to_string(), None));
 			});
 		})
 	};
@@ -79,7 +80,7 @@ fn app() -> Html
 
 		Callback::from(move |_|
 		{
-			let (name, email, editing_user_id) = (*user_state).clone();
+			let (name, email, _account_type, editing_user_id ) = (*user_state).clone();
 			let user_state = user_state.clone();
 			let message = message.clone();
 			let get_users = get_users.clone();
@@ -90,7 +91,7 @@ fn app() -> Html
 				{
 					let response = Request::put(&format!("http://127.0.0.1:8000/api/users/{}", id))
 						.header("Content-Type", "application/json")
-						.body(serde_json::to_string(&(id, name.as_str(), email.as_str())).unwrap())
+						.body( serde_json::to_string(&(id, name.as_str(), email.as_str(), _account_type.as_str() )).unwrap())
 						.send().await;
 
 					match response
@@ -104,7 +105,7 @@ fn app() -> Html
 						_ => message.set("Failed to update user".into()),
 					}
 
-					user_state.set(("".to_string(), "".to_string(), None));
+					user_state.set(("".to_string(), "".to_string(), "".to_string(), None));
 				});
 			}
 		})
@@ -149,7 +150,7 @@ fn app() -> Html
 		{
 			if let Some(user) = users.iter().find(|u| u.id == id)
 			{
-				user_state.set((user.name.clone(), user.email.clone(), Some(id)));
+				user_state.set((user.name.clone(), user.email.clone(), user.account_type.clone(), Some(id)));
 			}
 		})
 	};
@@ -170,7 +171,7 @@ fn app() -> Html
 								move |e: InputEvent|
 								{
 									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-									user_state.set((input.value(), user_state.1.clone(), user_state.2));
+									user_state.set((input.value(), user_state.1.clone(), user_state.2.clone(), user_state.3));
 								}
 							})}
 							class="border rounded px-4 py-2 mr-2"/>
@@ -182,7 +183,7 @@ fn app() -> Html
 								move |e: InputEvent|
 								{
 									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-									user_state.set((user_state.0.clone(), input.value(), user_state.2));
+									user_state.set((user_state.0.clone(), input.value(), user_state.2.clone(), user_state.3));
 								}
 							})}
 							class="border rounded px-4 py-2 mr-2"/>
@@ -190,7 +191,7 @@ fn app() -> Html
 						<button
 							onclick=
 							{
-								if user_state.2.is_some()
+								if user_state.3.is_some()
 								{
 									update_user.clone()
 								}
@@ -201,7 +202,7 @@ fn app() -> Html
 							}
 							class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 							{ 
-								if user_state.2.is_some()
+								if user_state.3.is_some()
 								{
 									"Update User"
 								}
@@ -234,7 +235,7 @@ fn app() -> Html
 							html!
 							{
 								<li class="mb-2">
-								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}, Email: {}", user.id, user.name, user.email) }</span>
+								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}, Email: {} AccountType: {} ", user.id, user.name, user.email, user.account_type) }</span>
 								<button
 									onclick={edit_user.clone().reform(move |_| user_id)}
 									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
@@ -260,6 +261,7 @@ struct User
 	id: i32,
 	name: String,
 	email: String,
+	account_type: String,
 }
 
 fn main()

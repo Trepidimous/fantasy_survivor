@@ -12,6 +12,7 @@ struct User
 	id: Option<i32>,
 	name: String,
 	email: String,
+	account_type: String,
 }
 
 #[post("/api/users", data = "<user>")]
@@ -22,8 +23,8 @@ async fn add_user(
 {
 	execute_query(
 		conn,
-		"INSERT INTO users (name, email) VALUES ($1, $2)",
-		&[&user.name, &user.email]
+		"INSERT INTO users (name, email, atype) VALUES ($1, $2, $3)",
+		&[&user.name, &user.email, &user.account_type]
 	).await?;
 	get_users(conn).await
 }
@@ -37,10 +38,10 @@ async fn get_users(conn: &State<Client>) -> Result<Json<Vec<User>>, Custom<Strin
 async fn get_users_from_db(client: &Client) -> Result<Vec<User>, Custom<String>>
 {
 	let users = client
-		.query("SELECT id, name, email FROM users", &[]).await
+		.query("SELECT id, name, email, atype FROM users", &[]).await
 		.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?
 		.iter()
-		.map(|row| User { id: Some(row.get(0)), name: row.get(1), email: row.get(2) })
+		.map(|row| User { id: Some(row.get(0)), name: row.get(1), email: row.get(2), account_type : row.get(3) })
 		.collect::<Vec<User>>();
 
 	Ok(users)
@@ -100,7 +101,8 @@ async fn rocket() -> _
 			"CREATE TABLE IF NOT EXISTS users (
 				id SERIAL PRIMARY KEY,
 				name TEXT NOT NULL,
-				email TEXT NOT NULL
+				email TEXT NOT NULL,
+				atype TEXT NOT NULL
 			)",
 			&[]
 		).await
