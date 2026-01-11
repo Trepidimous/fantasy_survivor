@@ -5,3 +5,5 @@
 /frontend/target/**
 
 /frontend/dist/**
+
+*.bak
