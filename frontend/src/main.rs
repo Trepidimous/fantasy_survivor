@@ -3,36 +3,20 @@ use serde::{ Deserialize, Serialize };
 use gloo::net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 
+fn main()
+{
+	yew::Renderer::<App>::new().render();
+}
+
 #[function_component(App)]
 fn app() -> Html
 {
-	let user_state = use_state(|| ("".to_string(), "".to_string(), "".to_string(), None as Option<i32>));
-	let message = use_state(|| "".to_string());
-	let users = use_state(Vec::new);
+	let user_state: UseStateHandle<(String, String, String, Option<i32>)> = use_state(|| ("".to_string(), "".to_string(), "".to_string(), None as Option<i32>));
+	let message: UseStateHandle<String> = use_state(|| "".to_string());
+	let users: UseStateHandle<Vec<User>> = use_state(Vec::new);
 
-	let get_users =
-	{
-		let users = users.clone();
-		let message = message.clone();
-		Callback::from(move |_|
-		{
-			let users = users.clone();
-			let message = message.clone();
-			spawn_local(async move
-			{
-				match Request::get("http://127.0.0.1:8000/api/users").send().await
-				{
-					Ok(resp) if resp.ok() =>
-					{
-						let fetched_users: Vec<User> = resp.json().await.unwrap_or_default();
-						users.set(fetched_users);
-					}
+	let get_users: Callback<()> = get_users(&users, &message);
 
-					_ => message.set("Failed to fetch users".into()),
-				}
-			});
-		})
-	};
 
 	let create_user =
 	{
@@ -255,6 +239,30 @@ fn app() -> Html
 	}
 }
 
+fn get_users(users: &UseStateHandle<Vec<User>>, message: &UseStateHandle<String>) -> Callback<()>
+{
+	let users = users.clone();
+	let message = message.clone();
+	Callback::from(move |_|
+	{
+		let users = users.clone();
+		let message = message.clone();
+		spawn_local(async move
+		{
+			match Request::get("http://127.0.0.1:8000/api/users").send().await
+			{
+				Ok(resp) if resp.ok() =>
+				{
+					let fetched_users: Vec<User> = resp.json().await.unwrap_or_default();
+					users.set(fetched_users);
+				}
+
+				_ => message.set("Failed to fetch users".into()),
+			}
+		});
+	})
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct User
 {
@@ -264,7 +272,3 @@ struct User
 	account_type: String,
 }
 
-fn main()
-{
-	yew::Renderer::<App>::new().render();
-}
