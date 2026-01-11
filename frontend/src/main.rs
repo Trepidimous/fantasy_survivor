@@ -156,88 +156,85 @@ fn app() -> Html
 
 	//html
 
-	html! {
-		<div class="container mx-auto p-4">
-			<h1 class="text-4xl font-bold text-blue-500 mb-4">{ "User Management" }</h1>
-				<div class="mb-4">
-					<input
-						placeholder="Name"
-						value={user_state.0.clone()}
-						oninput={Callback::from(
-						{
-							let user_state = user_state.clone();
-							move |e: InputEvent|
+	html!
+	{
+		<body class="bg-[#121212]  min-h-screen">
+			<div class="container mx-auto p-4">
+				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
+					<div class="mb-4">
+						<input placeholder="Name"
+							value={user_state.0.clone()}
+							oninput={Callback::from(
 							{
-								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-								user_state.set((input.value(), user_state.1.clone(), user_state.2));
-							}
-						})}
-						class="border rounded px-4 py-2 mr-2"
-					/>
-					<input
-						placeholder="Email"
-						value={user_state.1.clone()}
-						oninput={Callback::from(
-						{
-							let user_state = user_state.clone();
-							move |e: InputEvent|
+								let user_state = user_state.clone();
+								move |e: InputEvent|
+								{
+									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+									user_state.set((input.value(), user_state.1.clone(), user_state.2));
+								}
+							})}
+							class="border rounded px-4 py-2 mr-2"/>
+						<input placeholder="Email"
+							value={user_state.1.clone()}
+							oninput={Callback::from(
 							{
-								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-								user_state.set((user_state.0.clone(), input.value(), user_state.2));
+								let user_state = user_state.clone();
+								move |e: InputEvent|
+								{
+									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+									user_state.set((user_state.0.clone(), input.value(), user_state.2));
+								}
+							})}
+							class="border rounded px-4 py-2 mr-2"/>
+
+						<button
+							onclick=
+							{
+								if user_state.2.is_some()
+								{
+									update_user.clone()
+								}
+								else
+								{
+									create_user.clone()
+								}
 							}
-						})}
-						class="border rounded px-4 py-2 mr-2"
-					/>
+							class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+							{ 
+								if user_state.2.is_some()
+								{
+									"Update User"
+								}
+								else
+								{ 
+									"Create User"
+								}
+							}
+							
+						</button>
+							if !message.is_empty()
+							{
+								<p class="text-green-500 mt-2">{ &*message }</p>
+							}
+					</div>
 
 					<button
-						onclick=
-						{
-							if user_state.2.is_some()
-							{
-								update_user.clone()
-							}
-							else
-							{
-								create_user.clone()
-							}
-						}
-						class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-					>
-						{ 
-							if user_state.2.is_some()
-							{
-								"Update User"
-							}
-							else
-							{ 
-								"Create User"
-							}
-						}
-						
+						onclick={get_users.reform(|_| ())}
+						class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
+						{ "Fetch User List" }
 					</button>
-						if !message.is_empty()
-						{
-							<p class="text-green-500 mt-2">{ &*message }</p>
-						}
-				</div>
 
-				<button
-					onclick={get_users.reform(|_| ())}
-					class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
-					{ "Fetch User List" }
-				</button>
+					<h2 class="text-2xl font-bold text-[#FF8C00] mb-2">{ "User List" }</h2>
 
-				<h2 class="text-2xl font-bold text-gray-700 mb-2">{ "User List" }</h2>
-
-				<ul class="list-disc pl-5">
-				{
-					for (*users).iter().map(|user|
+					<ul class="list-disc pl-5">
 					{
-						let user_id = user.id;
-						html!
+						for (*users).iter().map(|user|
 						{
-							<li class="mb-2">
-								<span class="font-semibold">{ format!("ID: {}, Name: {}, Email: {}", user.id, user.name, user.email) }</span>
+							let user_id = user.id;
+							html!
+							{
+								<li class="mb-2">
+								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}, Email: {}", user.id, user.name, user.email) }</span>
 								<button
 									onclick={delete_user.clone().reform(move |_| user_id)}
 									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
@@ -252,7 +249,8 @@ fn app() -> Html
 						}
 					})}
 				</ul>
-		</div>
+			</div>
+		</body>
 	}
 }
 
