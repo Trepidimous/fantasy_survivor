@@ -28,6 +28,15 @@ fn app() -> Html
 	print_html(&user_state, &message, &users, get_users.clone(), create_user.clone(), update_user.clone(), delete_user.clone(), edit_user.clone())
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct User
+{
+	id: i32,
+	name: String,
+	email: String,
+	account_type: String,
+}
+
 fn get_users(users: &UseStateHandle<Vec<User>>,
 	message: &UseStateHandle<String>) -> Callback<()>
 {
@@ -255,10 +264,10 @@ fn print_html(user_state: &UseStateHandle<(String, String, String, Option<i32>)>
 							}
 							
 						</button>
-							if !message.is_empty()
-							{
-								<p class="text-green-500 mt-2">{ &**message }</p>
-							}
+						if !message.is_empty()
+						{
+							<p class="text-green-500 mt-2">{ &**message }</p>
+						}
 					</div>
 
 					<button
@@ -297,12 +306,4 @@ fn print_html(user_state: &UseStateHandle<(String, String, String, Option<i32>)>
 	}
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct User
-{
-	id: i32,
-	name: String,
-	email: String,
-	account_type: String,
-}
 
