@@ -17,127 +17,13 @@ fn app() -> Html
 
 	let get_users: Callback<()> = get_users(&users, &message);
 
+	let create_user: yew::Callback<yew::MouseEvent> = create_user(&user_state, &message, get_users.clone());
 
-	let create_user =
-	{
-		let user_state = user_state.clone();
-		let message = message.clone();
-		let get_users = get_users.clone();
-		Callback::from(move |_|
-		{
-			let (name, email, _account_type, _) = (*user_state).clone();
-			let user_state = user_state.clone();
-			let message = message.clone();
-			let get_users = get_users.clone();
-			let account_type_in = "Developer"; // GameMaster, Admin, Player
+	let update_user: Callback<MouseEvent> = update_user(&user_state, &message, get_users.clone());
 
+	let delete_user: Callback<i32> = delete_user(&message, get_users.clone());
 
-			spawn_local(async move
-			{
-				let user_data = serde_json::json!({ "name": name, "email": email, "account_type" : account_type_in });
-				let response = Request::post("http://127.0.0.1:8000/api/users")
-					.header("Content-Type", "application/json")
-					.body(user_data.to_string())
-					.send().await;
-
-				match response
-				{
-					Ok(resp) if resp.ok() =>
-					{
-						message.set("User created successfully".into());
-						get_users.emit(());
-					}
-
-					_ => message.set("Failed to create user".into()),
-				}
-
-				user_state.set(("".to_string(), "".to_string(), "".to_string(), None));
-			});
-		})
-	};
-
-	let update_user =
-	{
-		let user_state = user_state.clone();
-		let message = message.clone();
-		let get_users = get_users.clone();
-
-		Callback::from(move |_|
-		{
-			let (name, email, _account_type, editing_user_id ) = (*user_state).clone();
-			let user_state = user_state.clone();
-			let message = message.clone();
-			let get_users = get_users.clone();
-
-			if let Some(id) = editing_user_id
-			{
-				spawn_local(async move
-				{
-					let response = Request::put(&format!("http://127.0.0.1:8000/api/users/{}", id))
-						.header("Content-Type", "application/json")
-						.body( serde_json::to_string(&(id, name.as_str(), email.as_str(), _account_type.as_str() )).unwrap())
-						.send().await;
-
-					match response
-					{
-						Ok(resp) if resp.ok() =>
-						{
-							message.set("User updated successfully".into());
-							get_users.emit(());
-						}
-
-						_ => message.set("Failed to update user".into()),
-					}
-
-					user_state.set(("".to_string(), "".to_string(), "".to_string(), None));
-				});
-			}
-		})
-	};
-
-	let delete_user =
-	{
-		let message = message.clone();
-		let get_users = get_users.clone();
-
-		Callback::from(move |id: i32|
-		{
-			let message = message.clone();
-			let get_users = get_users.clone();
-
-			spawn_local(async move
-			{
-				let response = Request::delete(
-					&format!("http://127.0.0.1:8000/api/users/{}", id)
-				).send().await;
-
-				match response
-				{
-					Ok(resp) if resp.ok() =>
-					{
-						message.set("User deleted successfully".into());
-						get_users.emit(());
-					}
-
-					_ => message.set("Failed to delete user".into()),
-				}
-			});
-		})
-	};
-
-	let edit_user =
-	{
-		let user_state = user_state.clone();
-		let users = users.clone();
-
-		Callback::from(move |id: i32|
-		{
-			if let Some(user) = users.iter().find(|u| u.id == id)
-			{
-				user_state.set((user.name.clone(), user.email.clone(), user.account_type.clone(), Some(id)));
-			}
-		})
-	};
+	let edit_user: Callback<i32> = edit_user(&user_state, &users);
 
 	//html
 
@@ -239,7 +125,8 @@ fn app() -> Html
 	}
 }
 
-fn get_users(users: &UseStateHandle<Vec<User>>, message: &UseStateHandle<String>) -> Callback<()>
+fn get_users(users: &UseStateHandle<Vec<User>>,
+	message: &UseStateHandle<String>) -> Callback<()>
 {
 	let users = users.clone();
 	let message = message.clone();
@@ -261,6 +148,143 @@ fn get_users(users: &UseStateHandle<Vec<User>>, message: &UseStateHandle<String>
 			}
 		});
 	})
+}
+
+fn create_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)>, 
+	message: &UseStateHandle<String>,
+	get_users: Callback<()>) -> yew::Callback<yew::MouseEvent>
+{
+	return
+	{
+		let user_state = user_state.clone();
+		let message = message.clone();
+		let get_users = get_users.clone();
+		Callback::from(move |_|
+		{
+			let (name, email, _account_type, _) = (*user_state).clone();
+			let user_state = user_state.clone();
+			let message = message.clone();
+			let get_users = get_users.clone();
+			let account_type_in = "Developer"; // GameMaster, Admin, Player
+
+			spawn_local(async move
+			{
+				let user_data = serde_json::json!({ "name": name, "email": email, "account_type" : account_type_in });
+				let response = Request::post("http://127.0.0.1:8000/api/users")
+					.header("Content-Type", "application/json")
+					.body(user_data.to_string())
+					.send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set("User created successfully".into());
+						get_users.emit(());
+					}
+
+					_ => message.set("Failed to create user".into()),
+				}
+
+				user_state.set(("".to_string(), "".to_string(), "".to_string(), None));
+			});
+		})
+	};
+}
+
+fn update_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)>,
+	message: &UseStateHandle<String>,
+	get_users: Callback<()>) -> Callback<MouseEvent>
+{
+	return 
+	{
+		let user_state = user_state.clone();
+		let message = message.clone();
+		let get_users = get_users.clone();
+
+		Callback::from(move |_|
+		{
+			let (name, email, _account_type, editing_user_id ) = (*user_state).clone();
+			let user_state = user_state.clone();
+			let message = message.clone();
+			let get_users = get_users.clone();
+
+			if let Some(id) = editing_user_id
+			{
+				spawn_local(async move
+				{
+					let response = Request::put(&format!("http://127.0.0.1:8000/api/users/{}", id))
+						.header("Content-Type", "application/json")
+						.body( serde_json::to_string(&(id, name.as_str(), email.as_str(), _account_type.as_str() )).unwrap())
+						.send().await;
+
+					match response
+					{
+						Ok(resp) if resp.ok() =>
+						{
+							message.set("User updated successfully".into());
+							get_users.emit(());
+						}
+
+						_ => message.set("Failed to update user".into()),
+					}
+
+					user_state.set(("".to_string(), "".to_string(), "".to_string(), None));
+				});
+			}
+		})
+	};
+}
+
+fn delete_user(message: &UseStateHandle<String>,
+	get_users: Callback<()>) -> Callback<i32>
+{
+	return
+	{
+		let message = message.clone();
+		let get_users = get_users.clone();
+
+		Callback::from(move |id: i32|
+		{
+			let message = message.clone();
+			let get_users = get_users.clone();
+
+			spawn_local(async move
+			{
+				let response = Request::delete(
+					&format!("http://127.0.0.1:8000/api/users/{}", id)
+				).send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set("User deleted successfully".into());
+						get_users.emit(());
+					}
+
+					_ => message.set("Failed to delete user".into()),
+				}
+			});
+		})
+	};
+}
+
+fn edit_user(user_state : &UseStateHandle<(String, String, String, Option<i32>)>, users : &UseStateHandle<Vec<User>>) -> Callback<i32>
+{
+	return
+	{
+		let user_state = user_state.clone();
+		let users = users.clone();
+
+		Callback::from(move |id: i32|
+		{
+			if let Some(user) = users.iter().find(|u| u.id == id)
+			{
+				user_state.set((user.name.clone(), user.email.clone(), user.account_type.clone(), Some(id)));
+			}
+		})
+	};
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
