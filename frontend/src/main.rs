@@ -25,8 +25,18 @@ fn app() -> Html
 
 	let edit_user: Callback<i32> = edit_user(&user_state, &users);
 
-	//html
+	print_html(&user_state, &message, &users, get_users.clone(), create_user.clone(), update_user.clone(), delete_user.clone(), edit_user.clone())
+}
 
+fn print_html(user_state: &UseStateHandle<(String, String, String, Option<i32>)>,
+	message: &UseStateHandle<String>,
+	users: &UseStateHandle<Vec<User>>,
+	get_users: Callback<()>,
+	create_user: yew::Callback<yew::MouseEvent>,
+	update_user: Callback<MouseEvent>,
+	delete_user: Callback<i32>,
+	edit_user: Callback<i32>) -> Html
+{
 	html!
 	{
 		<body class="bg-[#121212]  min-h-screen">
@@ -85,7 +95,7 @@ fn app() -> Html
 						</button>
 							if !message.is_empty()
 							{
-								<p class="text-green-500 mt-2">{ &*message }</p>
+								<p class="text-green-500 mt-2">{ &**message }</p>
 							}
 					</div>
 
