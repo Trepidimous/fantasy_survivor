@@ -38,6 +38,9 @@ with postman, we can very that we can create, read, update, and destroy content 
 	* Read values:
 	Get: http://127.0.0.1:8000/api/users
 
+Database Viewers:
+  DBeaver or PG Admin
+
 5. Build FE
 	C:/source/software/fantasy_survivor/frontend
 	* cargo build --target wasm32-unknown-unknown

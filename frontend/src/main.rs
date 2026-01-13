@@ -11,7 +11,8 @@ fn main()
 #[function_component(App)]
 fn app() -> Html
 {
-	let user_state: UseStateHandle<(String, String, String, Option<i32>)> = use_state(|| ("".to_string(), "".to_string(), "".to_string(), None as Option<i32>));
+
+	let user_state: UseStateHandle<UserState> = use_state(|| UserState::new());// ("".to_string(), "".to_string(), "".to_string(), None as Option<i32>));
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
 	let users: UseStateHandle<Vec<User>> = use_state(Vec::new);
 
@@ -26,6 +27,29 @@ fn app() -> Html
 	let edit_user: Callback<i32> = edit_user(&user_state, &users);
 
 	print_html(&user_state, &message, &users, get_users.clone(), create_user.clone(), update_user.clone(), delete_user.clone(), edit_user.clone())
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct UserState
+{
+	name: String,
+	email: String,
+	account_type: String,
+	id: Option<i32>,
+}
+
+impl UserState
+{
+	fn new() -> Self
+	{
+		UserState
+		{
+			name: "".to_string(),
+			email: "".to_string(),
+			account_type: "".to_string(),
+			id: None,
+		}
+	}
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -62,7 +86,7 @@ fn get_users(users: &UseStateHandle<Vec<User>>,
 	})
 }
 
-fn create_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)>, 
+fn create_user(user_state: &UseStateHandle<UserState>, 
 	message: &UseStateHandle<String>,
 	get_users: Callback<()>) -> yew::Callback<yew::MouseEvent>
 {
@@ -73,7 +97,6 @@ fn create_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)
 		let get_users = get_users.clone();
 		Callback::from(move |_|
 		{
-			let (name, email, _account_type, _) = (*user_state).clone();
 			let user_state = user_state.clone();
 			let message = message.clone();
 			let get_users = get_users.clone();
@@ -81,7 +104,7 @@ fn create_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)
 
 			spawn_local(async move
 			{
-				let user_data = serde_json::json!({ "name": name, "email": email, "account_type" : account_type_in });
+				let user_data = serde_json::json!({ "name": user_state.name, "email": user_state.email, "account_type" : account_type_in });
 				let response = Request::post("http://127.0.0.1:8000/api/users")
 					.header("Content-Type", "application/json")
 					.body(user_data.to_string())
@@ -98,13 +121,13 @@ fn create_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)
 					_ => message.set("Failed to create user".into()),
 				}
 
-				user_state.set(("".to_string(), "".to_string(), "".to_string(), None));
+				user_state.set(UserState::new());
 			});
 		})
 	};
 }
 
-fn update_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)>,
+fn update_user(user_state: &UseStateHandle<UserState>,
 	message: &UseStateHandle<String>,
 	get_users: Callback<()>) -> Callback<MouseEvent>
 {
@@ -116,7 +139,7 @@ fn update_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)
 
 		Callback::from(move |_|
 		{
-			let (name, email, _account_type, editing_user_id ) = (*user_state).clone();
+			let editing_user_id = user_state.id;
 			let user_state = user_state.clone();
 			let message = message.clone();
 			let get_users = get_users.clone();
@@ -127,7 +150,7 @@ fn update_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)
 				{
 					let response = Request::put(&format!("http://127.0.0.1:8000/api/users/{}", id))
 						.header("Content-Type", "application/json")
-						.body( serde_json::to_string(&(id, name.as_str(), email.as_str(), _account_type.as_str() )).unwrap())
+						.body( serde_json::to_string(&(id, user_state.name.as_str(), user_state.email.as_str(), user_state.account_type.as_str() )).unwrap())
 						.send().await;
 
 					match response
@@ -141,7 +164,7 @@ fn update_user(user_state: &UseStateHandle<(String, String, String, Option<i32>)
 						_ => message.set("Failed to update user".into()),
 					}
 
-					user_state.set(("".to_string(), "".to_string(), "".to_string(), None));
+					user_state.set(UserState::new());
 				});
 			}
 		})
@@ -182,7 +205,7 @@ fn delete_user(message: &UseStateHandle<String>,
 	};
 }
 
-fn edit_user(user_state : &UseStateHandle<(String, String, String, Option<i32>)>, users : &UseStateHandle<Vec<User>>) -> Callback<i32>
+fn edit_user(user_state : &UseStateHandle<UserState>, users : &UseStateHandle<Vec<User>>) -> Callback<i32>
 {
 	return
 	{
@@ -193,13 +216,19 @@ fn edit_user(user_state : &UseStateHandle<(String, String, String, Option<i32>)>
 		{
 			if let Some(user) = users.iter().find(|u| u.id == id)
 			{
-				user_state.set((user.name.clone(), user.email.clone(), user.account_type.clone(), Some(id)));
+				let mut edited_user = UserState::new();
+				edited_user.id = Some(user.id);
+				edited_user.name = user.name.clone();
+				edited_user.email = user.email.clone();
+				edited_user.account_type = user.account_type.clone();
+
+				user_state.set(edited_user);
 			}
 		})
 	};
 }
 
-fn print_html(user_state: &UseStateHandle<(String, String, String, Option<i32>)>,
+fn print_html(user_state: &UseStateHandle<UserState>,
 	message: &UseStateHandle<String>,
 	users: &UseStateHandle<Vec<User>>,
 	get_users: Callback<()>,
@@ -215,26 +244,40 @@ fn print_html(user_state: &UseStateHandle<(String, String, String, Option<i32>)>
 				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
 					<div class="mb-4">
 						<input placeholder="Name"
-							value={user_state.0.clone()}
+							value={user_state.name.clone()}
 							oninput={Callback::from(
 							{
-								let user_state = user_state.clone();
+								let user_state_clone = user_state.clone();
 								move |e: InputEvent|
 								{
 									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-									user_state.set((input.value(), user_state.1.clone(), user_state.2.clone(), user_state.3));
+
+									let mut edited_user = UserState::new();
+									edited_user.id = user_state_clone.id;
+									edited_user.name = input.value();
+									edited_user.email = user_state_clone.email.clone();
+									edited_user.account_type = user_state_clone.account_type.clone();
+
+									user_state_clone.set(edited_user);
 								}
 							})}
 							class="border rounded px-4 py-2 mr-2"/>
 						<input placeholder="Email"
-							value={user_state.1.clone()}
+							value={user_state.email.clone()}
 							oninput={Callback::from(
 							{
-								let user_state = user_state.clone();
+								let user_state_clone = user_state.clone();
 								move |e: InputEvent|
 								{
 									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-									user_state.set((user_state.0.clone(), input.value(), user_state.2.clone(), user_state.3));
+
+									let mut edited_user = UserState::new();
+									edited_user.id = user_state_clone.id;
+									edited_user.name = user_state_clone.name.clone();
+									edited_user.email = input.value();
+									edited_user.account_type = user_state_clone.account_type.clone();
+									
+									user_state_clone.set(edited_user);
 								}
 							})}
 							class="border rounded px-4 py-2 mr-2"/>
@@ -242,7 +285,7 @@ fn print_html(user_state: &UseStateHandle<(String, String, String, Option<i32>)>
 						<button
 							onclick=
 							{
-								if user_state.3.is_some()
+								if user_state.id.is_some()
 								{
 									update_user.clone()
 								}
@@ -253,7 +296,7 @@ fn print_html(user_state: &UseStateHandle<(String, String, String, Option<i32>)>
 							}
 							class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 							{ 
-								if user_state.3.is_some()
+								if user_state.id.is_some()
 								{
 									"Update User"
 								}
