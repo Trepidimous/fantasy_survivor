@@ -11,7 +11,6 @@ fn main()
 #[function_component(App)]
 fn app() -> Html
 {
-
 	let user_state: UseStateHandle<UserState> = use_state(|| UserState::new());
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
 	let users: UseStateHandle<Vec<User>> = use_state(Vec::new);
@@ -26,7 +25,7 @@ fn app() -> Html
 
 	let edit_user: Callback<i32> = edit_user(&user_state, &users);
 
-	print_html(&user_state, &message, &users, get_users.clone(), create_user.clone(), update_user.clone(), delete_user.clone(), edit_user.clone())
+	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -348,5 +347,3 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 		</body>
 	}
 }
-
-
