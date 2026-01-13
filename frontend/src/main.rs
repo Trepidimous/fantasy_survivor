@@ -12,7 +12,7 @@ fn main()
 fn app() -> Html
 {
 
-	let user_state: UseStateHandle<UserState> = use_state(|| UserState::new());// ("".to_string(), "".to_string(), "".to_string(), None as Option<i32>));
+	let user_state: UseStateHandle<UserState> = use_state(|| UserState::new());
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
 	let users: UseStateHandle<Vec<User>> = use_state(Vec::new);
 
@@ -64,12 +64,12 @@ struct User
 fn get_users(users: &UseStateHandle<Vec<User>>,
 	message: &UseStateHandle<String>) -> Callback<()>
 {
-	let users = users.clone();
-	let message = message.clone();
+	let users: UseStateHandle<Vec<User>> = users.clone();
+	let message: UseStateHandle<String> = message.clone();
 	Callback::from(move |_|
 	{
-		let users = users.clone();
-		let message = message.clone();
+		let users: UseStateHandle<Vec<User>> = users.clone();
+		let message: UseStateHandle<String> = message.clone();
 		spawn_local(async move
 		{
 			match Request::get("http://127.0.0.1:8000/api/users").send().await
@@ -92,20 +92,20 @@ fn create_user(user_state: &UseStateHandle<UserState>,
 {
 	return
 	{
-		let user_state = user_state.clone();
-		let message = message.clone();
-		let get_users = get_users.clone();
+		let user_state: UseStateHandle<UserState> = user_state.clone();
+		let message: UseStateHandle<String> = message.clone();
+		let get_users: Callback<()> = get_users.clone();
 		Callback::from(move |_|
 		{
-			let user_state = user_state.clone();
-			let message = message.clone();
-			let get_users = get_users.clone();
-			let account_type_in = "Developer"; // GameMaster, Admin, Player
+			let user_state: UseStateHandle<UserState> = user_state.clone();
+			let message: UseStateHandle<String> = message.clone();
+			let get_users: Callback<()> = get_users.clone();
+			let account_type_in: &str = "Developer"; // GameMaster, Admin, Player
 
 			spawn_local(async move
 			{
-				let user_data = serde_json::json!({ "name": user_state.name, "email": user_state.email, "account_type" : account_type_in });
-				let response = Request::post("http://127.0.0.1:8000/api/users")
+				let user_data: serde_json::Value = serde_json::json!({ "name": user_state.name, "email": user_state.email, "account_type" : account_type_in });
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post("http://127.0.0.1:8000/api/users")
 					.header("Content-Type", "application/json")
 					.body(user_data.to_string())
 					.send().await;
@@ -133,22 +133,22 @@ fn update_user(user_state: &UseStateHandle<UserState>,
 {
 	return 
 	{
-		let user_state = user_state.clone();
-		let message = message.clone();
-		let get_users = get_users.clone();
+		let user_state: UseStateHandle<UserState> = user_state.clone();
+		let message: UseStateHandle<String> = message.clone();
+		let get_users: Callback<()> = get_users.clone();
 
 		Callback::from(move |_|
 		{
-			let editing_user_id = user_state.id;
-			let user_state = user_state.clone();
-			let message = message.clone();
-			let get_users = get_users.clone();
+			let editing_user_id: Option<i32> = user_state.id;
+			let user_state: UseStateHandle<UserState> = user_state.clone();
+			let message: UseStateHandle<String> = message.clone();
+			let get_users: Callback<()> = get_users.clone();
 
 			if let Some(id) = editing_user_id
 			{
 				spawn_local(async move
 				{
-					let response = Request::put(&format!("http://127.0.0.1:8000/api/users/{}", id))
+					let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::put(&format!("http://127.0.0.1:8000/api/users/{}", id))
 						.header("Content-Type", "application/json")
 						.body( serde_json::to_string(&(id, user_state.name.as_str(), user_state.email.as_str(), user_state.account_type.as_str() )).unwrap())
 						.send().await;
@@ -176,17 +176,17 @@ fn delete_user(message: &UseStateHandle<String>,
 {
 	return
 	{
-		let message = message.clone();
-		let get_users = get_users.clone();
+		let message: UseStateHandle<String> = message.clone();
+		let get_users: Callback<()> = get_users.clone();
 
 		Callback::from(move |id: i32|
 		{
-			let message = message.clone();
-			let get_users = get_users.clone();
+			let message: UseStateHandle<String> = message.clone();
+			let get_users: Callback<()> = get_users.clone();
 
 			spawn_local(async move
 			{
-				let response = Request::delete(
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::delete(
 					&format!("http://127.0.0.1:8000/api/users/{}", id)
 				).send().await;
 
@@ -209,14 +209,14 @@ fn edit_user(user_state : &UseStateHandle<UserState>, users : &UseStateHandle<Ve
 {
 	return
 	{
-		let user_state = user_state.clone();
-		let users = users.clone();
+		let user_state: UseStateHandle<UserState> = user_state.clone();
+		let users: UseStateHandle<Vec<User>> = users.clone();
 
 		Callback::from(move |id: i32|
 		{
-			if let Some(user) = users.iter().find(|u| u.id == id)
+			if let Some(user) = users.iter().find(|u: &&User| u.id == id)
 			{
-				let mut edited_user = UserState::new();
+				let mut edited_user: UserState = UserState::new();
 				edited_user.id = Some(user.id);
 				edited_user.name = user.name.clone();
 				edited_user.email = user.email.clone();
