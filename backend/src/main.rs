@@ -22,9 +22,9 @@ pub struct UserRepository
 
 impl UserRepository
 {
-	pub async fn collect_users(&self) -> Result<Vec<User>, String> // Result<Json<Vec<User>>, Custom<String>>
+	pub async fn collect_users(&self) -> Result<Vec<User>, String>
 	{
-		self.get_users_from_rocket_database().await//.map(Json)
+		self.get_users_from_rocket_database().await
 	}
 
 	async fn get_users_from_rocket_database(&self) -> Result<Vec<User>, String>
@@ -36,7 +36,7 @@ impl UserRepository
 			.map(|row: &tokio_postgres::Row| User { id: Some(row.get(0)), name: row.get(1), email: row.get(2), account_type : row.get(3) })
 			.collect::<Vec<User>>();
 
-		Ok(users)
+		return Ok(users);
 	}
 
 	async fn add_user(&self, user: &User) -> Result<(), String>
@@ -47,7 +47,8 @@ impl UserRepository
 				&[&user.name, &user.email, &user.account_type]
 			).await
 			.map_err(|e: tokio_postgres::Error| e.to_string())?;
-		Ok(())
+
+		return Ok(());
 	}
 
 	async fn edit_user(&self, id: i32, user: &User) -> Result<(), String>
@@ -58,7 +59,16 @@ impl UserRepository
 		).await
 		.map_err(|e: tokio_postgres::Error| e.to_string())?;
 		
-		Ok(())
+		return Ok(());
+	}
+
+	async fn delet_user(&self, id: i32) -> Result<Status, Custom<String>>
+	{
+		self.client
+			.execute("DELETE FROM users WHERE id = $1", &[&id]).await
+			.map_err(|e: tokio_postgres::Error| Custom(Status::InternalServerError, e.to_string()))?;
+
+		return Ok(Status::NoContent);
 	}
 
 }
@@ -72,17 +82,22 @@ impl UserManager
 {
 	pub async fn collect_users(&self) -> Result<Vec<User>, String>
 	{
-		self.repo.collect_users().await
+		return self.repo.collect_users().await;
 	}
 
 	pub async fn add_user(&self, user: &User) -> Result<(), String>
 	{
-		self.repo.add_user(user).await
+		return self.repo.add_user(user).await;
 	}
 
 	pub async fn edit_user(&self, id: i32, user: &User) -> Result<(), String>
 	{
-		self.repo.edit_user(id, user).await
+		return self.repo.edit_user(id, user).await;
+	}
+
+	pub async fn delete_user(&self, id: i32) -> Result<Status, Custom<String>>
+	{
+		return self.repo.delet_user(id).await;
 	}
 }
 
@@ -112,26 +127,26 @@ async fn update_user(
 	) -> Result<Json<Vec<User>>, Custom<String>>
 {
 	manager.edit_user(id, &user).await.map_err(|e: String| Custom(Status::InternalServerError, e))?;
-	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e))
+	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
 #[delete("/api/users/<id>")]
-async fn delete_user(conn: &State<Client>, id: i32) -> Result<Status, Custom<String>>
+async fn delete_user(manager : &State<UserManager>, id: i32) -> Result<Json<Vec<User>>, Custom<String>>
 {
-	execute_query(conn, "DELETE FROM users WHERE id = $1", &[&id]).await?;
-	Ok(Status::NoContent)
+	manager.delete_user(id).await.map_err(|e: Custom<String>| e)?;
+	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
-async fn execute_query(
-	client: &Client,
-	query: &str,
-	params: &[&(dyn tokio_postgres::types::ToSql + Sync)]
-	) -> Result<u64, Custom<String>>
-{
-	client
-		.execute(query, params).await
-		.map_err(|e: tokio_postgres::Error | Custom(Status::InternalServerError, e.to_string()))
-}
+// async fn execute_query(
+// 	client: &Client,
+// 	query: &str,
+// 	params: &[&(dyn tokio_postgres::types::ToSql + Sync)]
+// 	) -> Result<u64, Custom<String>>
+// {
+// 	client
+// 		.execute(query, params).await
+// 		.map_err(|e: tokio_postgres::Error | Custom(Status::InternalServerError, e.to_string()))
+// }
 
 #[launch]
 async fn rocket() -> _
@@ -175,7 +190,6 @@ async fn rocket() -> _
 
 	rocket
 		::build()
-		.manage(client)
 		.manage(user_manager)
 		.mount("/", routes![add_user, collect_users, update_user, delete_user])
 		.attach(cors)
