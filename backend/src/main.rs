@@ -26,8 +26,7 @@ async fn add_user(
 	user: Json<User>
 	) -> Result<Json<Vec<User>>, Custom<String>>
 {
-	manager.add_user(&user).await.map_err(|e: String| Custom(Status::InternalServerError, e))?;
-	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e))
+	return manager.add_user_and_refresh(&user).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
 #[put("/api/users/<id>", data = "<user>")]
@@ -37,15 +36,13 @@ async fn update_user(
 	user: Json<User>
 	) -> Result<Json<Vec<User>>, Custom<String>>
 {
-	manager.edit_user(id, &user).await.map_err(|e: String| Custom(Status::InternalServerError, e))?;
-	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+	return manager.edit_user_and_refresh(id, &user).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e))
 }
 
 #[delete("/api/users/<id>")]
 async fn delete_user(manager : &State<UserManager>, id: i32) -> Result<Json<Vec<User>>, Custom<String>>
 {
-	manager.delete_user(id).await.map_err(|e: Custom<String>| e)?;
-	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+	return manager.delete_user_and_refresh(id).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
 #[launch]
