@@ -3,9 +3,8 @@ extern crate rocket;
 
 mod memberships_resource;
 
-use rocket::serde::{ Deserialize, Serialize, json::Json };
+use rocket::serde::{ json::Json };
 use rocket::{ State, response::status::Custom, http::Status };
-use tokio_postgres::{ Client, NoTls };
 use rocket_cors::{ CorsOptions, AllowedOrigins };
 
 use crate::memberships_resource::User;

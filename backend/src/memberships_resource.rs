@@ -1,8 +1,7 @@
 
-use rocket::serde::{ Deserialize, Serialize, json::Json };
-use rocket::{ State, response::status::Custom, http::Status };
+use rocket::serde::{ Deserialize, Serialize };
+use rocket::{ response::status::Custom, http::Status };
 use tokio_postgres::{ Client, NoTls };
-use rocket_cors::{ CorsOptions, AllowedOrigins };
 
 pub fn helper_function()
 {
