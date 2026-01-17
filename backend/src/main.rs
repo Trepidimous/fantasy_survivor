@@ -22,6 +22,24 @@ pub struct UserRepository
 
 impl UserRepository
 {
+
+	pub async fn initialize(&self) -> ()
+	{
+		//Create the table if it doesn't exist
+		// [todo] add league tokens like this: "league_token INTEGER"
+		self.client
+			.execute(
+				"CREATE TABLE IF NOT EXISTS users (
+					id SERIAL PRIMARY KEY,
+					name TEXT NOT NULL,
+					email TEXT NOT NULL,
+					atype TEXT NOT NULL
+				)",
+				&[]
+			).await
+			.expect("Failed to create table");
+	}
+
 	pub async fn collect_users(&self) -> Result<Vec<User>, String>
 	{
 		self.get_users_from_rocket_database().await
@@ -137,17 +155,6 @@ async fn delete_user(manager : &State<UserManager>, id: i32) -> Result<Json<Vec<
 	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
-// async fn execute_query(
-// 	client: &Client,
-// 	query: &str,
-// 	params: &[&(dyn tokio_postgres::types::ToSql + Sync)]
-// 	) -> Result<u64, Custom<String>>
-// {
-// 	client
-// 		.execute(query, params).await
-// 		.map_err(|e: tokio_postgres::Error | Custom(Status::InternalServerError, e.to_string()))
-// }
-
 #[launch]
 async fn rocket() -> _
 {
@@ -163,22 +170,10 @@ async fn rocket() -> _
 		}
 	});
 
-	//Create the table if it doesn't exist
-	// [todo] add league tokens like this: "league_token INTEGER"
-	client
-		.execute(
-			"CREATE TABLE IF NOT EXISTS users (
-				id SERIAL PRIMARY KEY,
-				name TEXT NOT NULL,
-				email TEXT NOT NULL,
-				atype TEXT NOT NULL
-			)",
-			&[]
-		).await
-		.expect("Failed to create table");
-
     // 2. Initialize the Resource Access Layer (Repo)
     let repo: UserRepository = UserRepository { client };
+
+	 repo.initialize().await;
 
     // 3. Initialize the Business Layer (Manager)
     let user_manager: UserManager = UserManager { repo };
