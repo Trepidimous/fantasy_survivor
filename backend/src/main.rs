@@ -22,8 +22,32 @@ pub struct UserRepository
 
 impl UserRepository
 {
+	async fn connect_to() -> Self
+	{
+		let (new_client, connection) = tokio_postgres
+			::connect("host=localhost user=postgres password=postgres dbname=postgres", NoTls).await
+			.expect("Failed to connect to Postgres");
 
-	pub async fn initialize(&self) -> ()
+		tokio::spawn(async move
+		{
+			if let Err(e) = connection.await
+			{
+				eprintln!("Failed to connect to Postgres: {}", e);
+			}
+		});
+		
+		let user_repository = UserRepository
+		{
+			client: new_client,
+		};
+
+		return user_repository;
+	}
+}
+
+impl UserRepository
+{
+	pub async fn initialize_storage(&self) -> ()
 	{
 		//Create the table if it doesn't exist
 		// [todo] add league tokens like this: "league_token INTEGER"
@@ -158,22 +182,10 @@ async fn delete_user(manager : &State<UserManager>, id: i32) -> Result<Json<Vec<
 #[launch]
 async fn rocket() -> _
 {
-	let (client, connection) = tokio_postgres
-		::connect("host=localhost user=postgres password=postgres dbname=postgres", NoTls).await
-		.expect("Failed to connect to Postgres");
+	// 2. Initialize the Resource Access Layer (Repo)
+	let repo: UserRepository = UserRepository::connect_to().await;
 
-	tokio::spawn(async move
-	{
-		if let Err(e) = connection.await
-		{
-			eprintln!("Failed to connect to Postgres: {}", e);
-		}
-	});
-
-    // 2. Initialize the Resource Access Layer (Repo)
-    let repo: UserRepository = UserRepository { client };
-
-	 repo.initialize().await;
+	repo.initialize_storage().await;
 
     // 3. Initialize the Business Layer (Manager)
     let user_manager: UserManager = UserManager { repo };
@@ -188,5 +200,4 @@ async fn rocket() -> _
 		.manage(user_manager)
 		.mount("/", routes![add_user, collect_users, update_user, delete_user])
 		.attach(cors)
-
 }
