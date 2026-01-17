@@ -19,6 +19,20 @@ pub struct User
 
 impl UserManager
 {
+	pub async fn create() -> Self
+	{
+		// 2. Initialize the Resource Access Layer (Repo)
+		let repository: memberships_accessor::UserRepository = memberships_accessor::UserRepository::connect_to().await;
+		repository.initialize_storage().await;
+		
+		let user_repository: UserManager = UserManager
+		{
+			repo : repository
+		};
+
+		return user_repository;
+	}
+
 	pub async fn collect_users(&self) -> Result<Vec<User>, String>
 	{
 		return self.repo.collect_users().await;

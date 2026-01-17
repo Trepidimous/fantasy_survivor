@@ -3,11 +3,6 @@ use tokio_postgres::{ Client, NoTls };
 
 use crate::user_manager::User;
 
-pub fn helper_function()
-{
-    println!("Helper function called from utils.rs!");
-}
-
 pub struct UserRepository
 {
 	client: Client,
@@ -29,7 +24,7 @@ impl UserRepository
 			}
 		});
 		
-		let user_repository = UserRepository
+		let user_repository: UserRepository = UserRepository
 		{
 			client: new_client,
 		};

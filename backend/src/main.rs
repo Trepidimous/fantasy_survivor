@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate rocket;
 
-mod memberships_accessor;
 mod user_manager;
+mod memberships_accessor;
 
 use rocket::serde::{ json::Json };
 use rocket::{ State, response::status::Custom, http::Status };
@@ -48,15 +48,7 @@ async fn delete_user(manager : &State<UserManager>, id: i32) -> Result<Json<Vec<
 #[launch]
 async fn rocket() -> _
 {
-	memberships_accessor::helper_function();
-
-	// 2. Initialize the Resource Access Layer (Repo)
-	let repo: memberships_accessor::UserRepository = memberships_accessor::UserRepository::connect_to().await;
-
-	repo.initialize_storage().await;
-
-	// 3. Initialize the Business Layer (Manager)
-	let user_manager: UserManager = UserManager { repo };
+	let user_manager: UserManager = UserManager::create().await;
 
 	let cors: rocket_cors::Cors = CorsOptions::default()
 		.allowed_origins(AllowedOrigins::all())
