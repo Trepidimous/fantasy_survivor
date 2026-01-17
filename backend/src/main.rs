@@ -50,6 +50,17 @@ impl UserRepository
 		Ok(())
 	}
 
+	async fn edit_user(&self, id: i32, user: &User) -> Result<(), String>
+	{
+		self.client.execute(
+		"UPDATE users SET name = $1, email = $2 WHERE id = $3",
+		&[&user.name, &user.email, &id]
+		).await
+		.map_err(|e: tokio_postgres::Error| e.to_string())?;
+		
+		Ok(())
+	}
+
 }
 
 pub struct UserManager
@@ -67,6 +78,11 @@ impl UserManager
 	pub async fn add_user(&self, user: &User) -> Result<(), String>
 	{
 		self.repo.add_user(user).await
+	}
+
+	pub async fn edit_user(&self, id: i32, user: &User) -> Result<(), String>
+	{
+		self.repo.edit_user(id, user).await
 	}
 }
 
@@ -95,13 +111,7 @@ async fn update_user(
 	user: Json<User>
 	) -> Result<Json<Vec<User>>, Custom<String>>
 {
-	execute_query(
-		conn,
-		"UPDATE users SET name = $1, email = $2 WHERE id = $3",
-		&[&user.name, &user.email, &id]
-	).await?;
-		
-	//get_users(conn).await
+	manager.edit_user(id, &user).await.map_err(|e: String| Custom(Status::InternalServerError, e))?;
 	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e))
 }
 
