@@ -24,12 +24,12 @@ impl UserRepository
 {
 	pub async fn collect_users(&self) -> Result<Vec<User>, String> // Result<Json<Vec<User>>, Custom<String>>
 	{
-		self.get_users_from_rocket_database(&self.client).await//.map(Json)
+		self.get_users_from_rocket_database().await//.map(Json)
 	}
 
-	async fn get_users_from_rocket_database(&self, client: &Client) -> Result<Vec<User>, String>
+	async fn get_users_from_rocket_database(&self) -> Result<Vec<User>, String>
 	{
-		let users: Vec<User> = client
+		let users: Vec<User> = self.client
 			.query("SELECT id, name, email, atype FROM users", &[]).await
 			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
 			.iter()
@@ -38,6 +38,18 @@ impl UserRepository
 
 		Ok(users)
 	}
+
+	async fn add_user(&self, user: &User) -> Result<(), String>
+	{
+		self.client
+			.execute(
+				"INSERT INTO users (name, email, atype) VALUES ($1, $2, $3)",
+				&[&user.name, &user.email, &user.account_type]
+			).await
+			.map_err(|e: tokio_postgres::Error| e.to_string())?;
+		Ok(())
+	}
+
 }
 
 pub struct UserManager
@@ -51,6 +63,11 @@ impl UserManager
 	{
 		self.repo.collect_users().await
 	}
+
+	pub async fn add_user(&self, user: &User) -> Result<(), String>
+	{
+		self.repo.add_user(user).await
+	}
 }
 
 #[get("/api/users")]
@@ -63,21 +80,17 @@ async fn collect_users(
 
 #[post("/api/users", data = "<user>")]
 async fn add_user(
-	conn: &State<Client>,
+	manager : &State<UserManager>,
 	user: Json<User>
 	) -> Result<Json<Vec<User>>, Custom<String>>
 {
-	execute_query(
-		conn,
-		"INSERT INTO users (name, email, atype) VALUES ($1, $2, $3)",
-		&[&user.name, &user.email, &user.account_type]
-	).await?;
-	get_users(conn).await
+	manager.add_user(&user).await.map_err(|e: String| Custom(Status::InternalServerError, e))?;
+	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e))
 }
 
 #[put("/api/users/<id>", data = "<user>")]
 async fn update_user(
-	conn: &State<Client>,
+	manager : &State<UserManager>,
 	id: i32,
 	user: Json<User>
 	) -> Result<Json<Vec<User>>, Custom<String>>
@@ -87,7 +100,9 @@ async fn update_user(
 		"UPDATE users SET name = $1, email = $2 WHERE id = $3",
 		&[&user.name, &user.email, &id]
 	).await?;
-	get_users(conn).await
+		
+	//get_users(conn).await
+	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e))
 }
 
 #[delete("/api/users/<id>")]
