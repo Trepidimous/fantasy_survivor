@@ -43,10 +43,7 @@ impl UserRepository
 
 		return user_repository;
 	}
-}
 
-impl UserRepository
-{
 	pub async fn initialize_storage(&self) -> ()
 	{
 		//Create the table if it doesn't exist
@@ -66,7 +63,7 @@ impl UserRepository
 
 	pub async fn collect_users(&self) -> Result<Vec<User>, String>
 	{
-		self.get_users_from_rocket_database().await
+		return self.get_users_from_rocket_database().await;
 	}
 
 	async fn get_users_from_rocket_database(&self) -> Result<Vec<User>, String>
@@ -148,7 +145,7 @@ async fn collect_users(
 	manager : &State<UserManager>
 	) -> Result<Json<Vec<User>>, Custom<String>>
 {
-	manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e))
+	return manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
 #[post("/api/users", data = "<user>")]
@@ -187,16 +184,15 @@ async fn rocket() -> _
 
 	repo.initialize_storage().await;
 
-    // 3. Initialize the Business Layer (Manager)
-    let user_manager: UserManager = UserManager { repo };
+	// 3. Initialize the Business Layer (Manager)
+	let user_manager: UserManager = UserManager { repo };
 
 	let cors: rocket_cors::Cors = CorsOptions::default()
 		.allowed_origins(AllowedOrigins::all())
 		.to_cors()
 		.expect("Error while building CORS");
 
-	rocket
-		::build()
+	rocket::build()
 		.manage(user_manager)
 		.mount("/", routes![add_user, collect_users, update_user, delete_user])
 		.attach(cors)
