@@ -7,12 +7,58 @@ use tokio_postgres::{ Client, NoTls };
 use rocket_cors::{ CorsOptions, AllowedOrigins };
 
 #[derive(Serialize, Deserialize, Clone)]
-struct User
+pub struct User
 {
 	id: Option<i32>,
 	name: String,
 	email: String,
 	account_type: String,
+}
+
+pub struct UserRepository
+{
+	client: Client,
+}
+
+impl UserRepository
+{
+	pub async fn collect_users(&self) -> Result<Vec<User>, String> // Result<Json<Vec<User>>, Custom<String>>
+	{
+		self.get_users_from_rocket_database(&self.client).await//.map(Json)
+	}
+
+	async fn get_users_from_rocket_database(&self, client: &Client) -> Result<Vec<User>, String>
+	{
+		let users: Vec<User> = client
+			.query("SELECT id, name, email, atype FROM users", &[]).await
+			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
+			.iter()
+			.map(|row: &tokio_postgres::Row| User { id: Some(row.get(0)), name: row.get(1), email: row.get(2), account_type : row.get(3) })
+			.collect::<Vec<User>>();
+
+		Ok(users)
+	}
+}
+
+pub struct UserManager
+{
+	repo: UserRepository,
+}
+
+impl UserManager
+{
+	pub async fn collect_users(&self) -> Result<Vec<User>, String>
+	{
+		self.repo.collect_users().await
+	}
+}
+
+#[get("/api/users")]
+async fn collect_users(
+	manager : &State<UserManager>
+	) -> Result<Json<Vec<User>>, Custom<String>>
+{
+	manager.collect_users().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e))
 }
 
 #[post("/api/users", data = "<user>")]
@@ -27,24 +73,6 @@ async fn add_user(
 		&[&user.name, &user.email, &user.account_type]
 	).await?;
 	get_users(conn).await
-}
-
-#[get("/api/users")]
-async fn get_users(conn: &State<Client>) -> Result<Json<Vec<User>>, Custom<String>>
-{
-	get_users_from_db(conn).await.map(Json)
-}
-
-async fn get_users_from_db(client: &Client) -> Result<Vec<User>, Custom<String>>
-{
-	let users: Vec<User> = client
-		.query("SELECT id, name, email, atype FROM users", &[]).await
-		.map_err(|e: tokio_postgres::Error| Custom(Status::InternalServerError, e.to_string()))?
-		.iter()
-		.map(|row: &tokio_postgres::Row| User { id: Some(row.get(0)), name: row.get(1), email: row.get(2), account_type : row.get(3) })
-		.collect::<Vec<User>>();
-
-	Ok(users)
 }
 
 #[put("/api/users/<id>", data = "<user>")]
@@ -109,7 +137,13 @@ async fn rocket() -> _
 		).await
 		.expect("Failed to create table");
 
-	let cors = CorsOptions::default()
+    // 2. Initialize the Resource Access Layer (Repo)
+    let repo: UserRepository = UserRepository { client };
+
+    // 3. Initialize the Business Layer (Manager)
+    let user_manager: UserManager = UserManager { repo };
+
+	let cors: rocket_cors::Cors = CorsOptions::default()
 		.allowed_origins(AllowedOrigins::all())
 		.to_cors()
 		.expect("Error while building CORS");
@@ -117,7 +151,8 @@ async fn rocket() -> _
 	rocket
 		::build()
 		.manage(client)
-		.mount("/", routes![add_user, get_users, update_user, delete_user])
+		.manage(user_manager)
+		.mount("/", routes![add_user, collect_users, update_user, delete_user])
 		.attach(cors)
 
 }
