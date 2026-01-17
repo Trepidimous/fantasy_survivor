@@ -37,11 +37,11 @@ async fn get_users(conn: &State<Client>) -> Result<Json<Vec<User>>, Custom<Strin
 
 async fn get_users_from_db(client: &Client) -> Result<Vec<User>, Custom<String>>
 {
-	let users = client
+	let users: Vec<User> = client
 		.query("SELECT id, name, email, atype FROM users", &[]).await
-		.map_err(|e| Custom(Status::InternalServerError, e.to_string()))?
+		.map_err(|e: tokio_postgres::Error| Custom(Status::InternalServerError, e.to_string()))?
 		.iter()
-		.map(|row| User { id: Some(row.get(0)), name: row.get(1), email: row.get(2), account_type : row.get(3) })
+		.map(|row: &tokio_postgres::Row| User { id: Some(row.get(0)), name: row.get(1), email: row.get(2), account_type : row.get(3) })
 		.collect::<Vec<User>>();
 
 	Ok(users)
@@ -77,7 +77,7 @@ async fn execute_query(
 {
 	client
 		.execute(query, params).await
-		.map_err(|e| Custom(Status::InternalServerError, e.to_string()))
+		.map_err(|e: tokio_postgres::Error | Custom(Status::InternalServerError, e.to_string()))
 }
 
 #[launch]
@@ -96,6 +96,7 @@ async fn rocket() -> _
 	});
 
 	//Create the table if it doesn't exist
+	// [todo] add league tokens like this: "league_token INTEGER"
 	client
 		.execute(
 			"CREATE TABLE IF NOT EXISTS users (
