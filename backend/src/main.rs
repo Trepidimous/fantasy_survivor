@@ -8,7 +8,7 @@ use rocket::serde::{ json::Json };
 use rocket::{ State, response::status::Custom, http::Status };
 use rocket_cors::{ CorsOptions, AllowedOrigins };
 
-use crate::memberships_resource::User;
+use crate::user_manager::User;
 use crate::user_manager::UserManager;
 
 

@@ -1,20 +1,12 @@
 
-use rocket::serde::{ Deserialize, Serialize };
 use rocket::{ response::status::Custom, http::Status };
 use tokio_postgres::{ Client, NoTls };
+
+use crate::user_manager::User;
 
 pub fn helper_function()
 {
     println!("Helper function called from utils.rs!");
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-pub struct User
-{
-	id: Option<i32>,
-	name: String,
-	email: String,
-	account_type: String,
 }
 
 pub struct UserRepository

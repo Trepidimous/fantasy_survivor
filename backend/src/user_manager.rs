@@ -1,12 +1,21 @@
 
+use rocket::serde::{ Deserialize, Serialize };
 use rocket::{ response::status::Custom, http::Status };
 
 use crate::memberships_resource;
-use crate::memberships_resource::User;
 
 pub struct UserManager
 {
 	pub repo: memberships_resource::UserRepository,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct User
+{
+	pub id: Option<i32>,
+	pub name: String,
+	pub email: String,
+	pub account_type: String,
 }
 
 impl UserManager
