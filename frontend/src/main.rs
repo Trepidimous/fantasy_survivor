@@ -11,7 +11,7 @@ fn main()
 #[function_component(App)]
 fn app() -> Html
 {
-	let user_state: UseStateHandle<UserState> = use_state(|| UserState::new());
+	let user_state: UseStateHandle<UserState> = use_state(|| UserState::from_default());
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
 	let users: UseStateHandle<Vec<User>> = use_state(Vec::new);
 
@@ -39,7 +39,7 @@ struct UserState
 
 impl UserState
 {
-	fn new() -> Self
+	fn from_default() -> Self
 	{
 		UserState
 		{
@@ -47,6 +47,20 @@ impl UserState
 			email: "".to_string(),
 			account_type: "".to_string(),
 			id: None,
+		}
+	}
+}
+
+impl UserState
+{
+	fn new(id_in : Option<i32>, name_in : String, email_in : String, account_type_in : String) -> Self
+	{
+		UserState
+		{
+			name : name_in,
+			email : email_in,
+			account_type : account_type_in,
+			id : id_in,
 		}
 	}
 }
@@ -120,7 +134,7 @@ fn create_user(user_state: &UseStateHandle<UserState>,
 					_ => message.set("Failed to create user".into()),
 				}
 
-				user_state.set(UserState::new());
+				user_state.set(UserState::from_default());
 			});
 		})
 	};
@@ -163,7 +177,7 @@ fn update_user(user_state: &UseStateHandle<UserState>,
 						_ => message.set("Failed to update user".into()),
 					}
 
-					user_state.set(UserState::new());
+					user_state.set(UserState::from_default());
 				});
 			}
 		})
@@ -208,20 +222,20 @@ fn edit_user(user_state : &UseStateHandle<UserState>, users : &UseStateHandle<Ve
 {
 	return
 	{
-		let user_state: UseStateHandle<UserState> = user_state.clone();
+		let user_state_handle: UseStateHandle<UserState> = user_state.clone();
 		let users: UseStateHandle<Vec<User>> = users.clone();
 
 		Callback::from(move |id: i32|
 		{
 			if let Some(user) = users.iter().find(|u: &&User| u.id == id)
 			{
-				let mut edited_user: UserState = UserState::new();
-				edited_user.id = Some(user.id);
-				edited_user.name = user.name.clone();
-				edited_user.email = user.email.clone();
-				edited_user.account_type = user.account_type.clone();
+				let edited_user: UserState = UserState::new(
+					Some(user.id),
+					user.name.clone(),
+					user.email.clone(),
+					user.account_type.clone());
 
-				user_state.set(edited_user);
+				user_state_handle.set(edited_user);
 			}
 		})
 	};
@@ -251,11 +265,12 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 								{
 									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
 
-									let mut edited_user = UserState::new();
-									edited_user.id = user_state_clone.id;
-									edited_user.name = input.value();
-									edited_user.email = user_state_clone.email.clone();
-									edited_user.account_type = user_state_clone.account_type.clone();
+									let edited_user = UserState::new(
+										user_state_clone.id,
+										input.value(),
+										user_state_clone.email.clone(),
+										user_state_clone.account_type.clone()
+									 );
 
 									user_state_clone.set(edited_user);
 								}
@@ -270,12 +285,13 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 								{
 									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
 
-									let mut edited_user = UserState::new();
-									edited_user.id = user_state_clone.id;
-									edited_user.name = user_state_clone.name.clone();
-									edited_user.email = input.value();
-									edited_user.account_type = user_state_clone.account_type.clone();
-									
+									let edited_user = UserState::new(
+										user_state_clone.id,
+										user_state_clone.name.clone(),
+										input.value(),
+										user_state_clone.account_type.clone()
+										);
+
 									user_state_clone.set(edited_user);
 								}
 							})}
