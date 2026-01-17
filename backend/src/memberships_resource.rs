@@ -1,5 +1,4 @@
 
-use rocket::{ response::status::Custom, http::Status };
 use tokio_postgres::{ Client, NoTls };
 
 use crate::user_manager::User;
@@ -95,13 +94,13 @@ impl UserRepository
 		return Ok(());
 	}
 
-	pub async fn delet_user(&self, id: i32) -> Result<Status, Custom<String>>
+	pub async fn delet_user(&self, id: i32) -> Result<(), String>
 	{
 		self.client
 			.execute("DELETE FROM users WHERE id = $1", &[&id]).await
-			.map_err(|e: tokio_postgres::Error| Custom(Status::InternalServerError, e.to_string()))?;
+			.map_err(|e|  e.to_string())?;
 
-		return Ok(Status::NoContent);
+		return Ok(());
 	}
 
 }

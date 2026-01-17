@@ -1,6 +1,6 @@
 
 use rocket::serde::{ Deserialize, Serialize };
-use rocket::{ response::status::Custom, http::Status };
+//use rocket::{ response::status::Custom, http::Status };
 
 use crate::memberships_resource;
 
@@ -49,11 +49,11 @@ impl UserManager
 
 	pub async fn delete_user_and_refresh(&self, id: i32) -> Result<Vec<User>, String>
 	{
-		self.delete_user(id).await.map_err(|e| e.0.to_string())?;
+		self.delete_user(id).await.map_err(|e| e.to_string())?;
 		return self.collect_users().await;
 	}
 
-	async fn delete_user(&self, id: i32) -> Result<Status, Custom<String>>
+	async fn delete_user(&self, id: i32) -> Result<(), String>
 	{
 		return self.repo.delet_user(id).await;
 	}
