@@ -241,6 +241,38 @@ fn edit_user(user_state : &UseStateHandle<UserState>, users : &UseStateHandle<Ve
 	};
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct GameShow
+{
+	id: i32,
+	name: String,
+}
+
+fn get_gameshows(gameshows: &UseStateHandle<Vec<GameShow>>,
+	message: &UseStateHandle<String>) -> Callback<()>
+{
+	let gameshows: UseStateHandle<Vec<GameShow>> = gameshows.clone();
+	let message: UseStateHandle<String> = message.clone();
+	Callback::from(move |_|
+	{
+		let gameshows: UseStateHandle<Vec<GameShow>> = gameshows.clone();
+		let message: UseStateHandle<String> = message.clone();
+		spawn_local(async move
+		{
+			match Request::get("http://127.0.0.1:8000/api/gameshows").send().await
+			{
+				Ok(resp) if resp.ok() =>
+				{
+					let fetched_gameshows: Vec<GameShow> = resp.json().await.unwrap_or_default();
+					gameshows.set(fetched_gameshows);
+				}
+
+				_ => message.set("Failed to fetch gameshows".into()),
+			}
+		});
+	})
+}
+
 fn print_html(user_state: &UseStateHandle<UserState>,
 	message: &UseStateHandle<String>,
 	users: &UseStateHandle<Vec<User>>,

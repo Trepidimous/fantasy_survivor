@@ -4,10 +4,13 @@ extern crate rocket;
 mod user_manager;
 mod memberships_accessor;
 
+mod gameshow_manager;
+
 use rocket::serde::{ json::Json };
 use rocket::{ State, response::status::Custom, http::Status };
 use rocket_cors::{ CorsOptions, AllowedOrigins };
 
+use crate::gameshow_manager::{GameShow, GameShowManager};
 use crate::user_manager::User;
 use crate::user_manager::UserManager;
 
@@ -45,10 +48,19 @@ async fn delete_user(manager : &State<UserManager>, id: i32) -> Result<Json<Vec<
 	return manager.delete_user_and_refresh(id).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
+#[get("/api/gameshows")]
+async fn collect_gameshows(
+	manager : &State<GameShowManager>
+	) -> Result<Json<Vec<GameShow>>, Custom<String>>
+{
+	return manager.collect_gameshows().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+}
+
 #[launch]
 async fn rocket() -> _
 {
 	let user_manager: UserManager = UserManager::create().await;
+	let gameshow_manager : GameShowManager = GameShowManager::create().await;
 
 	let cors: rocket_cors::Cors = CorsOptions::default()
 		.allowed_origins(AllowedOrigins::all())
@@ -57,6 +69,7 @@ async fn rocket() -> _
 
 	rocket::build()
 		.manage(user_manager)
-		.mount("/", routes![add_user, collect_users, update_user, delete_user])
+		.manage(gameshow_manager)
+		.mount("/", routes![add_user, collect_users, update_user, delete_user, collect_gameshows])
 		.attach(cors)
 }

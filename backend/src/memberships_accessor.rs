@@ -2,6 +2,7 @@
 use tokio_postgres::{ Client, NoTls };
 
 use crate::user_manager::User;
+use crate::gameshow_manager::GameShow;
 
 pub struct UserRepository
 {
@@ -130,19 +131,19 @@ impl UserRepository
 
 	// Game Shows //
 
-/*
-	pub async fn collect_game_shows(&self) -> Result<Vec<User>, String>
+	pub async fn collect_game_shows(&self) -> Result<Vec<GameShow>, String>
 	{
-		let users: Vec<User> = self.client
+		let users: Vec<GameShow> = self.client
 			.query("SELECT game_show_id, name FROM game_shows", &[]).await
 			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
 			.iter()
-			.map(|row: &tokio_postgres::Row| User { id: Some(row.get(0)), name: row.get(1), email: row.get(2), account_type : row.get(3) })
-			.collect::<Vec<User>>();
+			.map(|row: &tokio_postgres::Row| GameShow { id: Some(row.get(0)), name: row.get(1) })
+			.collect::<Vec<GameShow>>();
 
 		return Ok(users);
 	}
 
+	/*
 	pub async fn add_game_show(&self, user: &User) -> Result<(), String>
 	{
 		self.client
