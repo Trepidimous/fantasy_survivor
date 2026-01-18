@@ -34,27 +34,57 @@ impl UserRepository
 
 	pub async fn initialize_storage(&self) -> ()
 	{
-		//Create the table if it doesn't exist
-		// [todo] add league tokens like this: "league_token INTEGER"
 		self.client
 			.execute(
 				"CREATE TABLE IF NOT EXISTS users (
 					id SERIAL PRIMARY KEY,
 					name TEXT NOT NULL,
 					email TEXT NOT NULL,
-					atype TEXT NOT NULL
+					atype TEXT NOT NULL,
+					num_league_tokens INTEGER DEFAULT 0
 				)",
 				&[]
 			).await
 			.expect("Failed to create table");
+
+		self.client
+			.execute(
+				"CREATE TABLE IF NOT EXISTS game_shows (
+					game_show_id SERIAL PRIMARY KEY,
+					name TEXT DEFAULT 'Jeffs Jamboree'
+				)",
+				&[]
+			).await
+			.expect("Failed to create table");
+
+		self.client
+			.execute(
+				"CREATE TABLE IF NOT EXISTS contestants (
+					contestant_id SERIAL PRIMARY KEY,
+					name TEXT NOT NULL
+				)",
+				&[]
+			).await
+			.expect("Failed to create table");
+
+		self.client
+			.execute(
+				"CREATE TABLE IF NOT EXISTS game_show_contestants (
+					contestant_id INTEGER,
+					game_show_id INTEGER,
+					PRIMARY KEY (contestant_id, game_show_id),
+					FOREIGN KEY (contestant_id) REFERENCES contestants(contestant_id),
+					FOREIGN KEY (game_show_id) REFERENCES game_shows(game_show_id)
+				)",
+				&[]
+			).await
+			.expect("Failed to create table");
+
 	}
+
+	// Users //
 
 	pub async fn collect_users(&self) -> Result<Vec<User>, String>
-	{
-		return self.get_users_from_rocket_database().await;
-	}
-
-	async fn get_users_from_rocket_database(&self) -> Result<Vec<User>, String>
 	{
 		let users: Vec<User> = self.client
 			.query("SELECT id, name, email, atype FROM users", &[]).await
@@ -97,5 +127,42 @@ impl UserRepository
 
 		return Ok(());
 	}
+
+	// Game Shows //
+
+/*
+	pub async fn collect_game_shows(&self) -> Result<Vec<User>, String>
+	{
+		let users: Vec<User> = self.client
+			.query("SELECT game_show_id, name FROM game_shows", &[]).await
+			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
+			.iter()
+			.map(|row: &tokio_postgres::Row| User { id: Some(row.get(0)), name: row.get(1), email: row.get(2), account_type : row.get(3) })
+			.collect::<Vec<User>>();
+
+		return Ok(users);
+	}
+
+	pub async fn add_game_show(&self, user: &User) -> Result<(), String>
+	{
+		self.client
+			.execute(
+				"INSERT INTO users (name, email, atype) VALUES ($1, $2, $3)",
+				&[&user.name, &user.email, &user.account_type]
+			).await
+			.map_err(|e: tokio_postgres::Error| e.to_string())?;
+
+		return Ok(());
+	}
+
+	pub async fn delete_game_show(&self, id: i32) -> Result<(), String>
+	{
+		self.client
+			.execute("DELETE FROM users WHERE id = $1", &[&id]).await
+			.map_err(|e|  e.to_string())?;
+
+		return Ok(());
+	}
+	*/
 
 }

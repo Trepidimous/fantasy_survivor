@@ -1,0 +1,8 @@
+SELECT 
+    gs.show_name, 
+    c.full_name, 
+    sm.role
+FROM game_shows gs
+JOIN show_members sm ON gs.show_id = sm.show_id
+JOIN contestants c ON sm.contestant_id = c.contestant_id
+WHERE gs.show_name = 'Jeopardy';
