@@ -3,6 +3,7 @@ extern crate rocket;
 
 mod user_manager;
 mod memberships_accessor;
+mod utility;
 
 mod gameshow_manager;
 
@@ -10,9 +11,12 @@ use rocket::serde::{ json::Json };
 use rocket::{ State, response::status::Custom, http::Status };
 use rocket_cors::{ CorsOptions, AllowedOrigins };
 
+use crate::utility::StorageConnector;
 use crate::gameshow_manager::{GameShow, GameShowManager};
 use crate::user_manager::User;
 use crate::user_manager::UserManager;
+
+use std::sync::Arc;
 
 
 #[get("/api/users")]
@@ -74,8 +78,11 @@ async fn delete_gameshow(manager : &State<GameShowManager>, id: i32) -> Result<J
 #[launch]
 async fn rocket() -> _
 {
-	let user_manager: UserManager = UserManager::create().await;
-	let gameshow_manager : GameShowManager = GameShowManager::create().await;
+	let storage_connection : StorageConnector = StorageConnector::establish_connection_to_storage().await;
+	let shared_storage: Arc<StorageConnector> = Arc::new(storage_connection);
+
+	let user_manager: UserManager = UserManager::create(Arc::clone(&shared_storage)).await;
+	let gameshow_manager : GameShowManager = GameShowManager::create(Arc::clone(&shared_storage)).await;
 
 	let cors: rocket_cors::Cors = CorsOptions::default()
 		.allowed_origins(AllowedOrigins::all())

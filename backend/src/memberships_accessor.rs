@@ -3,31 +3,23 @@ use tokio_postgres::{ Client, NoTls };
 
 use crate::user_manager::User;
 use crate::gameshow_manager::GameShow;
+use crate::utility::StorageConnector;
+
+use std::sync::Arc;
 
 pub struct UserRepository
 {
-	client: Client,
+	connector: Arc<StorageConnector>,
 }
 
 impl UserRepository
 {
-	pub async fn connect_to() -> Self
-	{
-		let (new_client, connection) = tokio_postgres
-			::connect("host=localhost user=postgres password=postgres dbname=postgres", NoTls).await
-			.expect("Failed to connect to Postgres");
-
-		tokio::spawn(async move
-		{
-			if let Err(e) = connection.await
-			{
-				eprintln!("Failed to connect to Postgres: {}", e);
-			}
-		});
-		
+	pub async fn connect_to(storage_connection: Arc<StorageConnector>) -> Self
+	{	
 		let user_repository: UserRepository = UserRepository
 		{
-			client: new_client,
+			//client : storage_connection.storage,
+			connector: Arc::clone(&storage_connection),
 		};
 
 		return user_repository;
@@ -35,7 +27,7 @@ impl UserRepository
 
 	pub async fn initialize_storage(&self) -> ()
 	{
-		self.client
+		self.connector.storage
 			.execute(
 				"CREATE TABLE IF NOT EXISTS users (
 					id SERIAL PRIMARY KEY,
@@ -48,7 +40,7 @@ impl UserRepository
 			).await
 			.expect("Failed to create table");
 
-		self.client
+		self.connector.storage
 			.execute(
 				"CREATE TABLE IF NOT EXISTS game_shows (
 					game_show_id SERIAL PRIMARY KEY,
@@ -58,7 +50,7 @@ impl UserRepository
 			).await
 			.expect("Failed to create table");
 
-		self.client
+		self.connector.storage
 			.execute(
 				"CREATE TABLE IF NOT EXISTS contestants (
 					contestant_id SERIAL PRIMARY KEY,
@@ -68,7 +60,7 @@ impl UserRepository
 			).await
 			.expect("Failed to create table");
 
-		self.client
+		self.connector.storage
 			.execute(
 				"CREATE TABLE IF NOT EXISTS game_show_contestants (
 					contestant_id INTEGER,
@@ -87,7 +79,7 @@ impl UserRepository
 
 	pub async fn collect_users(&self) -> Result<Vec<User>, String>
 	{
-		let users: Vec<User> = self.client
+		let users: Vec<User> = self.connector.storage
 			.query("SELECT id, name, email, atype FROM users", &[]).await
 			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
 			.iter()
@@ -99,7 +91,7 @@ impl UserRepository
 
 	pub async fn add_user(&self, user: &User) -> Result<(), String>
 	{
-		self.client
+		self.connector.storage
 			.execute(
 				"INSERT INTO users (name, email, atype) VALUES ($1, $2, $3)",
 				&[&user.name, &user.email, &user.account_type]
@@ -111,7 +103,7 @@ impl UserRepository
 
 	pub async fn edit_user(&self, id: i32, user: &User) -> Result<(), String>
 	{
-		self.client.execute(
+		self.connector.storage.execute(
 		"UPDATE users SET name = $1, email = $2 WHERE id = $3",
 		&[&user.name, &user.email, &id]
 		).await
@@ -122,7 +114,7 @@ impl UserRepository
 
 	pub async fn delet_user(&self, id: i32) -> Result<(), String>
 	{
-		self.client
+		self.connector.storage
 			.execute("DELETE FROM users WHERE id = $1", &[&id]).await
 			.map_err(|e|  e.to_string())?;
 
@@ -133,7 +125,7 @@ impl UserRepository
 
 	pub async fn collect_game_shows(&self) -> Result<Vec<GameShow>, String>
 	{
-		let users: Vec<GameShow> = self.client
+		let users: Vec<GameShow> = self.connector.storage
 			.query("SELECT game_show_id, name FROM game_shows", &[]).await
 			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
 			.iter()
@@ -145,7 +137,7 @@ impl UserRepository
 
 	pub async fn add_gameshow(&self, game_show: &GameShow) -> Result<(), String>
 	{
-		self.client
+		self.connector.storage
 			.execute(
 				"INSERT INTO game_shows (name) VALUES ($1)",
 				&[&game_show.name]
@@ -157,7 +149,7 @@ impl UserRepository
 
 	pub async fn delete_game_show(&self, id: i32) -> Result<(), String>
 	{
-		self.client
+		self.connector.storage
 			.execute("DELETE FROM game_shows WHERE game_show_id = $1", &[&id]).await
 			.map_err(|e|  e.to_string())?;
 
