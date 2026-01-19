@@ -1,6 +1,4 @@
 
-use tokio_postgres::{ Client, NoTls };
-
 use crate::user_manager::User;
 use crate::gameshow_manager::GameShow;
 use crate::utility::StorageConnector;
@@ -18,7 +16,6 @@ impl UserRepository
 	{	
 		let user_repository: UserRepository = UserRepository
 		{
-			//client : storage_connection.storage,
 			connector: Arc::clone(&storage_connection),
 		};
 

@@ -2,13 +2,12 @@
 use rocket::serde::{ Deserialize, Serialize };
 
 use crate::memberships_accessor;
-use crate::utility::StorageConnector;
 
 use std::sync::Arc;
 
 pub struct GameShowManager
 {
-	pub repo: memberships_accessor::UserRepository,
+	pub repo: Arc<memberships_accessor::UserRepository>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -21,12 +20,8 @@ pub struct GameShow
 impl GameShowManager
 {
 
-	pub async fn create(storage_connection : Arc<StorageConnector>) -> Self
-	{
-		// 2. Initialize the Resource Access Layer (Repo)
-		let repository: memberships_accessor::UserRepository = memberships_accessor::UserRepository::connect_to(storage_connection).await;
-		repository.initialize_storage().await;
-		
+	pub async fn create(repository : Arc<memberships_accessor::UserRepository>) -> Self
+	{	
 		let game_repository: GameShowManager = GameShowManager
 		{
 			repo : repository
