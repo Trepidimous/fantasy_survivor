@@ -12,16 +12,19 @@ pub struct UserRepository
 impl UserRepository
 {
 	pub async fn new(storage_connection: Arc<StorageConnector>) -> Self
-	{	
+	{
+
 		let user_repository: UserRepository = UserRepository
 		{
 			connector: Arc::clone(&storage_connection),
 		};
 
+		user_repository.initialize_storage().await;
+
 		return user_repository;
 	}
 
-	pub async fn initialize_user_storage(&self) -> ()
+	async fn initialize_storage(&self) -> ()
 	{
 		self.connector.storage
 			.execute(
@@ -46,8 +49,6 @@ impl UserRepository
 			).await
 			.expect("Failed to create table");
 	}
-
-	// Users //
 
 	pub async fn collect_users(&self) -> Result<Vec<User>, String>
 	{

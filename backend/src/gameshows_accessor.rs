@@ -13,15 +13,17 @@ impl GameShowRepository
 {
 	pub async fn new(storage_connection: Arc<StorageConnector>) -> Self
 	{	
-		let user_repository: GameShowRepository = GameShowRepository
+		let repository: GameShowRepository = GameShowRepository
 		{
 			connector: Arc::clone(&storage_connection),
 		};
 
-		return user_repository;
+		repository.initialize_storage().await;
+
+		return repository;
 	}
 
-	pub async fn initialize_storage(&self) -> ()
+	async fn initialize_storage(&self) -> ()
 	{
 		self.connector.storage
 			.execute(
