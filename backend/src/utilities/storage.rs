@@ -8,7 +8,7 @@ pub struct StorageConnector
 
 impl StorageConnector
 {
-	pub async fn establish_connection_to_storage() -> Self
+	pub async fn establish_connection() -> Self
 	{
 		let (new_connection, connection) = tokio_postgres
 			::connect("host=localhost user=postgres password=postgres dbname=postgres", NoTls).await

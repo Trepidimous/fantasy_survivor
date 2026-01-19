@@ -1,13 +1,13 @@
 
 use rocket::serde::{ Deserialize, Serialize };
 
-use crate::memberships_accessor;
+use crate::gameshows_accessor;
 
 use std::sync::Arc;
 
 pub struct GameShowManager
 {
-	pub repo: Arc<memberships_accessor::UserRepository>,
+	pub repo: Arc<gameshows_accessor::GameShowRepository>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -20,7 +20,7 @@ pub struct GameShow
 impl GameShowManager
 {
 
-	pub async fn create(repository : Arc<memberships_accessor::UserRepository>) -> Self
+	pub async fn create(repository : Arc<gameshows_accessor::GameShowRepository>) -> Self
 	{	
 		let game_repository: GameShowManager = GameShowManager
 		{

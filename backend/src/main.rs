@@ -3,6 +3,7 @@ extern crate rocket;
 
 mod user_manager;
 mod memberships_accessor;
+mod gameshows_accessor;
 mod utilities;
 
 mod gameshow_manager;
@@ -78,16 +79,18 @@ async fn delete_gameshow(manager : &State<GameShowManager>, id: i32) -> Result<J
 #[launch]
 async fn rocket() -> _
 {
-	let storage_connection : StorageConnector = StorageConnector::establish_connection_to_storage().await;
+	let storage_connection : StorageConnector = StorageConnector::establish_connection().await;
 	let shared_storage: Arc<StorageConnector> = Arc::new(storage_connection);
 
 	let memberships_repository : memberships_accessor::UserRepository = memberships_accessor::UserRepository::new(Arc::clone(&shared_storage)).await;
 	memberships_repository.initialize_user_storage().await;
-	memberships_repository.initialize_contestant_storage().await;
+	let gameshows_respository : gameshows_accessor::GameShowRepository = gameshows_accessor::GameShowRepository::new(Arc::clone(&shared_storage)).await;
+	gameshows_respository.initialize_storage().await;
 	let shared_memberships_repo : Arc<memberships_accessor::UserRepository> = Arc::new(memberships_repository);
+	let shared_gameshows_repo : Arc<gameshows_accessor::GameShowRepository> = Arc::new(gameshows_respository);
 
 	let user_manager: UserManager = UserManager::create(Arc::clone(&shared_memberships_repo)).await;
-	let gameshow_manager : GameShowManager = GameShowManager::create(Arc::clone(&shared_memberships_repo)).await;
+	let gameshow_manager : GameShowManager = GameShowManager::create(Arc::clone(&shared_gameshows_repo)).await;
 
 	let cors: rocket_cors::Cors = CorsOptions::default()
 		.allowed_origins(AllowedOrigins::all())
