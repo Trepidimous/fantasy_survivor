@@ -15,17 +15,18 @@ fn app() -> Html
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
 	let users: UseStateHandle<Vec<User>> = use_state(Vec::new);
 
+	let gameshow_state : UseStateHandle<GameShowState> = use_state(|| GameShowState { name: "".to_string(), id: None });
+	let gameshows: UseStateHandle<Vec<GameShow>> = use_state(Vec::new);
+	let get_gameshows: Callback<()> = get_gameshows(&gameshows, &message);
+	let create_gameshow: yew::Callback<yew::MouseEvent> = create_gameshow(&gameshow_state, &message, get_gameshows.clone());
+
 	let get_users: Callback<()> = get_users(&users, &message);
-
 	let create_user: yew::Callback<yew::MouseEvent> = create_user(&user_state, &message, get_users.clone());
-
 	let update_user: Callback<MouseEvent> = update_user(&user_state, &message, get_users.clone());
-
 	let delete_user: Callback<i32> = delete_user(&message, get_users.clone());
-
 	let edit_user: Callback<i32> = edit_user(&user_state, &users);
 
-	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user)
+	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user, &gameshow_state, &gameshows, get_gameshows, create_gameshow)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -49,10 +50,7 @@ impl UserState
 			id: None,
 		}
 	}
-}
 
-impl UserState
-{
 	fn new(id_in : Option<i32>, name_in : String, email_in : String, account_type_in : String) -> Self
 	{
 		UserState
@@ -248,6 +246,24 @@ struct GameShow
 	name: String,
 }
 
+struct GameShowState
+{
+	name: String,
+	id: Option<i32>,
+}
+
+impl GameShowState
+{
+	fn new(id_in : Option<i32>, name_in : String) -> Self
+	{
+		GameShowState
+		{
+			name : name_in,
+			id : id_in
+		}
+	}
+}
+
 fn get_gameshows(gameshows: &UseStateHandle<Vec<GameShow>>,
 	message: &UseStateHandle<String>) -> Callback<()>
 {
@@ -273,6 +289,48 @@ fn get_gameshows(gameshows: &UseStateHandle<Vec<GameShow>>,
 	})
 }
 
+fn create_gameshow(gameshow_state: &UseStateHandle<GameShowState>,
+	message: &UseStateHandle<String>,
+	get_gameshows: Callback<()>) -> Callback<MouseEvent>
+{
+	return
+	{
+		let gameshow_state: UseStateHandle<GameShowState> = gameshow_state.clone();
+		let message: UseStateHandle<String> = message.clone();
+		let get_gameshows: Callback<()> = get_gameshows.clone();
+		Callback::from(move |_|
+		{
+			let gameshow_state: UseStateHandle<GameShowState> = gameshow_state.clone();
+			let message: UseStateHandle<String> = message.clone();
+			let get_gameshows: Callback<()> = get_gameshows.clone();
+
+			spawn_local(async move
+			{
+				let gameshow_data: serde_json::Value = serde_json::json!({ "name": gameshow_state.name });
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post("http://127.0.0.1:8000/api/gameshows")
+					.header("Content-Type", "application/json")
+					.body(gameshow_data.to_string())
+					.send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set("Game Show created successfully".into());
+						get_gameshows.emit(());
+					}
+
+					_ => message.set("Failed to create game show".into()),
+				}
+
+				gameshow_state.set(GameShowState::new(None, "".to_string()));
+			});
+		})
+	};
+}
+
+
+
 fn print_html(user_state: &UseStateHandle<UserState>,
 	message: &UseStateHandle<String>,
 	users: &UseStateHandle<Vec<User>>,
@@ -280,14 +338,57 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 	create_user: yew::Callback<yew::MouseEvent>,
 	update_user: Callback<MouseEvent>,
 	delete_user: Callback<i32>,
-	edit_user: Callback<i32>) -> Html
+	edit_user: Callback<i32>,
+	gameshow_state : &UseStateHandle<GameShowState>,
+	gameshows: &UseStateHandle<Vec<GameShow>>,
+	get_gameshows: Callback<()>,
+	create_gameshow: yew::Callback<yew::MouseEvent>
+) -> Html
 {
 	html!
 	{
 		<body class="bg-[#121212]  min-h-screen">
 			<div class="container mx-auto p-4">
+
+					<button
+						onclick={get_gameshows.reform(|_| ())}
+						class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
+						{ "Fetch Game Shows" }
+					</button>
+
+					<input placeholder="New Game Show Name"
+						value={gameshow_state.name.clone()}
+						oninput={Callback::from(
+						{
+							let gameshow_state_clone = gameshow_state.clone();
+							move |e: InputEvent|
+							{
+								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+
+								let edited_gameshow = GameShowState::new(
+									gameshow_state_clone.id,
+									input.value()
+								);
+
+								gameshow_state_clone.set(edited_gameshow);
+							}
+						})}
+						class="border rounded px-4 py-2 mr-2"/>
+
+						<button
+							onclick=
+							{
+								create_gameshow.clone()
+							}
+							class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+							{ 
+								"Create Game Show"
+							}
+						</button>
+
 				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
 					<div class="mb-4">
+
 						<input placeholder="Name"
 							value={user_state.name.clone()}
 							oninput={Callback::from(
@@ -352,8 +453,8 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 									"Create User"
 								}
 							}
-							
 						</button>
+
 						if !message.is_empty()
 						{
 							<p class="text-green-500 mt-2">{ &**message }</p>

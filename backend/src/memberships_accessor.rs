@@ -143,19 +143,19 @@ impl UserRepository
 		return Ok(users);
 	}
 
-	/*
-	pub async fn add_game_show(&self, user: &User) -> Result<(), String>
+	pub async fn add_gameshow(&self, game_show: &GameShow) -> Result<(), String>
 	{
 		self.client
 			.execute(
-				"INSERT INTO users (name, email, atype) VALUES ($1, $2, $3)",
-				&[&user.name, &user.email, &user.account_type]
+				"INSERT INTO game_shows (name) VALUES ($1)",
+				&[&game_show.name]
 			).await
 			.map_err(|e: tokio_postgres::Error| e.to_string())?;
 
 		return Ok(());
 	}
 
+	/*
 	pub async fn delete_game_show(&self, id: i32) -> Result<(), String>
 	{
 		self.client
