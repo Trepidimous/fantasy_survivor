@@ -12,7 +12,7 @@ pub struct UserRepository
 
 impl UserRepository
 {
-	pub async fn connect_to(storage_connection: Arc<StorageConnector>) -> Self
+	pub async fn new(storage_connection: Arc<StorageConnector>) -> Self
 	{	
 		let user_repository: UserRepository = UserRepository
 		{
@@ -22,7 +22,7 @@ impl UserRepository
 		return user_repository;
 	}
 
-	pub async fn initialize_storage(&self) -> ()
+	pub async fn initialize_user_storage(&self) -> ()
 	{
 		self.connector.storage
 			.execute(
@@ -46,7 +46,10 @@ impl UserRepository
 				&[]
 			).await
 			.expect("Failed to create table");
+	}
 
+	pub async fn initialize_contestant_storage(&self) -> ()
+	{
 		self.connector.storage
 			.execute(
 				"CREATE TABLE IF NOT EXISTS contestants (

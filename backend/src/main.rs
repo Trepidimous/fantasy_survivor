@@ -81,8 +81,9 @@ async fn rocket() -> _
 	let storage_connection : StorageConnector = StorageConnector::establish_connection_to_storage().await;
 	let shared_storage: Arc<StorageConnector> = Arc::new(storage_connection);
 
-	let memberships_repository : memberships_accessor::UserRepository = memberships_accessor::UserRepository::connect_to(Arc::clone(&shared_storage)).await;
-	memberships_repository.initialize_storage().await;
+	let memberships_repository : memberships_accessor::UserRepository = memberships_accessor::UserRepository::new(Arc::clone(&shared_storage)).await;
+	memberships_repository.initialize_user_storage().await;
+	memberships_repository.initialize_contestant_storage().await;
 	let shared_memberships_repo : Arc<memberships_accessor::UserRepository> = Arc::new(memberships_repository);
 
 	let user_manager: UserManager = UserManager::create(Arc::clone(&shared_memberships_repo)).await;
