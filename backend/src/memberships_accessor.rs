@@ -1,7 +1,7 @@
 
 use crate::user_manager::User;
 use crate::gameshow_manager::GameShow;
-use crate::utility::StorageConnector;
+use crate::utilities::storage::StorageConnector;
 
 use std::sync::Arc;
 

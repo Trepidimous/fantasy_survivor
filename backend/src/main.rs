@@ -3,7 +3,7 @@ extern crate rocket;
 
 mod user_manager;
 mod memberships_accessor;
-mod utility;
+mod utilities;
 
 mod gameshow_manager;
 
@@ -11,7 +11,7 @@ use rocket::serde::{ json::Json };
 use rocket::{ State, response::status::Custom, http::Status };
 use rocket_cors::{ CorsOptions, AllowedOrigins };
 
-use crate::utility::StorageConnector;
+use crate::utilities::storage::StorageConnector;
 use crate::gameshow_manager::{GameShow, GameShowManager};
 use crate::user_manager::User;
 use crate::user_manager::UserManager;
