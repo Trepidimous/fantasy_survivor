@@ -349,7 +349,7 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 	{
 		<body class="bg-[#121212]  min-h-screen">
 			<div class="container mx-auto p-4">
-
+				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
 					<button
 						onclick={get_gameshows.reform(|_| ())}
 						class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
@@ -373,20 +373,44 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 								gameshow_state_clone.set(edited_gameshow);
 							}
 						})}
-						class="border rounded px-4 py-2 mr-2"/>
+						class="border rounded px-4 py-2 mr-2"
+					/>
 
-						<button
-							onclick=
+					<button
+						onclick=
+						{
+							create_gameshow.clone()
+						}
+						class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+						{ 
+							"Create Game Show"
+						}
+					</button>
+
+					<ul class="list-disc pl-5">
+					{
+						for (*gameshows).iter().map(|gameshow|
+						{
+							let gameshow_id = gameshow.id;
+							html!
 							{
-								create_gameshow.clone()
-							}
-							class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-							{ 
-								"Create Game Show"
-							}
-						</button>
+								<li class="mb-2">
+								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}", gameshow.id, gameshow.name) }</span>
+								<button
+									onclick={edit_user.clone().reform(move |_| gameshow_id)}
+									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
+									{ "Edit" }
+								</button>
+								<button
+									onclick={delete_user.clone().reform(move |_| gameshow_id)}
+									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+									{ "Delete" }
+								</button>
+							</li>
+						}
+					})}
+					</ul>
 
-				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
 					<div class="mb-4">
 
 						<input placeholder="Name"
@@ -491,7 +515,7 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 							</li>
 						}
 					})}
-				</ul>
+					</ul>
 			</div>
 		</body>
 	}
