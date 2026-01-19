@@ -65,6 +65,12 @@ async fn add_gameshow(
 	return manager.add_gameshow_and_refresh(&gameshow).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
+#[delete("/api/gameshows/<id>")]
+async fn delete_gameshow(manager : &State<GameShowManager>, id: i32) -> Result<Json<Vec<GameShow>>, Custom<String>>
+{
+	return manager.delete_gameshow_and_refresh(id).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+}
+
 #[launch]
 async fn rocket() -> _
 {
@@ -79,6 +85,6 @@ async fn rocket() -> _
 	rocket::build()
 		.manage(user_manager)
 		.manage(gameshow_manager)
-		.mount("/", routes![add_user, collect_users, update_user, delete_user, collect_gameshows, add_gameshow])
+		.mount("/", routes![add_user, collect_users, update_user, delete_user, collect_gameshows, add_gameshow, delete_gameshow])
 		.attach(cors)
 }

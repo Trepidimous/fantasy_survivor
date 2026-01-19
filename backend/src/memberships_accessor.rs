@@ -155,15 +155,13 @@ impl UserRepository
 		return Ok(());
 	}
 
-	/*
 	pub async fn delete_game_show(&self, id: i32) -> Result<(), String>
 	{
 		self.client
-			.execute("DELETE FROM users WHERE id = $1", &[&id]).await
+			.execute("DELETE FROM game_shows WHERE game_show_id = $1", &[&id]).await
 			.map_err(|e|  e.to_string())?;
 
 		return Ok(());
 	}
-	*/
 
 }

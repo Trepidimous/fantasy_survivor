@@ -19,6 +19,7 @@ fn app() -> Html
 	let gameshows: UseStateHandle<Vec<GameShow>> = use_state(Vec::new);
 	let get_gameshows: Callback<()> = get_gameshows(&gameshows, &message);
 	let create_gameshow: yew::Callback<yew::MouseEvent> = create_gameshow(&gameshow_state, &message, get_gameshows.clone());
+	let delete_gameshow : yew::Callback<i32> = delete_gameshow(&message, get_gameshows.clone());
 
 	let get_users: Callback<()> = get_users(&users, &message);
 	let create_user: yew::Callback<yew::MouseEvent> = create_user(&user_state, &message, get_users.clone());
@@ -26,7 +27,7 @@ fn app() -> Html
 	let delete_user: Callback<i32> = delete_user(&message, get_users.clone());
 	let edit_user: Callback<i32> = edit_user(&user_state, &users);
 
-	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user, &gameshow_state, &gameshows, get_gameshows, create_gameshow)
+	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user, &gameshow_state, &gameshows, get_gameshows, create_gameshow, delete_gameshow)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -329,6 +330,39 @@ fn create_gameshow(gameshow_state: &UseStateHandle<GameShowState>,
 	};
 }
 
+fn delete_gameshow(message: &UseStateHandle<String>,
+	get_gameshows: Callback<()>) -> Callback<i32>
+{
+	return
+	{
+		let message: UseStateHandle<String> = message.clone();
+		let get_gameshows: Callback<()> = get_gameshows.clone();
+
+		Callback::from(move |id: i32|
+		{
+			let message: UseStateHandle<String> = message.clone();
+			let get_gameshows: Callback<()> = get_gameshows.clone();
+
+			spawn_local(async move
+			{
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::delete(
+					&format!("http://127.0.0.1:8000/api/gameshows/{}", id)
+				).send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set("Game Show deleted successfully".into());
+						get_gameshows.emit(());
+					}
+
+					_ => message.set("Failed to delete gameshow".into()),
+				}
+			});
+		})
+	};
+}
 
 
 fn print_html(user_state: &UseStateHandle<UserState>,
@@ -342,7 +376,8 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 	gameshow_state : &UseStateHandle<GameShowState>,
 	gameshows: &UseStateHandle<Vec<GameShow>>,
 	get_gameshows: Callback<()>,
-	create_gameshow: yew::Callback<yew::MouseEvent>
+	create_gameshow: yew::Callback<yew::MouseEvent>,
+	delete_gameshow : yew::Callback<i32>,
 ) -> Html
 {
 	html!
@@ -399,10 +434,10 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 								<button
 									onclick={edit_user.clone().reform(move |_| gameshow_id)}
 									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
-									{ "Edit" }
+									{ "Select" }
 								</button>
 								<button
-									onclick={delete_user.clone().reform(move |_| gameshow_id)}
+									onclick={delete_gameshow.clone().reform(move |_| gameshow_id)}
 									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
 									{ "Delete" }
 								</button>

@@ -43,17 +43,15 @@ impl GameShowManager
 		return self.repo.collect_game_shows().await;
 	}
 
-	/*
-
-	pub async fn delete_user_and_refresh(&self, id: i32) -> Result<Vec<GameShow>, String>
+	pub async fn delete_gameshow_and_refresh(&self, id: i32) -> Result<Vec<GameShow>, String>
 	{
-		self.delete_user(id).await.map_err(|e| e.to_string())?;
-		return self.collect_users().await;
+		self.delete_gameshow(id).await.map_err(|e| e.to_string())?;
+		return self.collect_gameshows().await;
 	}
 
-	async fn delete_user(&self, id: i32) -> Result<(), String>
+	async fn delete_gameshow(&self, id: i32) -> Result<(), String>
 	{
-		return self.repo.delet_user(id).await;
+		return self.repo.delete_game_show(id).await;
 	}
-	*/
+	
 }
