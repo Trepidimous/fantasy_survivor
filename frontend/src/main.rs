@@ -3,6 +3,8 @@ use serde::{ Deserialize, Serialize };
 use gloo::net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 
+macro_rules! PLATFORM_URL { () => { "http://127.0.0.1:8000/api" } }
+
 fn main()
 {
 	yew::Renderer::<App>::new().render();
@@ -84,7 +86,8 @@ fn get_users(users: &UseStateHandle<Vec<User>>,
 		let message: UseStateHandle<String> = message.clone();
 		spawn_local(async move
 		{
-			match Request::get("http://127.0.0.1:8000/api/users").send().await
+			let url = concat!(PLATFORM_URL!(), "/users");
+			match Request::get(&url).send().await
 			{
 				Ok(resp) if resp.ok() =>
 				{
@@ -117,7 +120,8 @@ fn create_user(user_state: &UseStateHandle<UserState>,
 			spawn_local(async move
 			{
 				let user_data: serde_json::Value = serde_json::json!({ "name": user_state.name, "email": user_state.email, "account_type" : account_type_in });
-				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post("http://127.0.0.1:8000/api/users")
+				let url = concat!(PLATFORM_URL!(), "/users");
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(&url)
 					.header("Content-Type", "application/json")
 					.body(user_data.to_string())
 					.send().await;
@@ -160,7 +164,8 @@ fn update_user(user_state: &UseStateHandle<UserState>,
 			{
 				spawn_local(async move
 				{
-					let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::put(&format!("http://127.0.0.1:8000/api/users/{}", id))
+					let url = format!(concat!(PLATFORM_URL!(), "/users/{}"), id);
+					let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::put(&url)
 						.header("Content-Type", "application/json")
 						.body( serde_json::to_string(&(id, user_state.name.as_str(), user_state.email.as_str(), user_state.account_type.as_str() )).unwrap())
 						.send().await;
@@ -198,9 +203,8 @@ fn delete_user(message: &UseStateHandle<String>,
 
 			spawn_local(async move
 			{
-				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::delete(
-					&format!("http://127.0.0.1:8000/api/users/{}", id)
-				).send().await;
+				let url: String = format!(concat!(PLATFORM_URL!(), "/users/{}"), id);
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::delete(&url).send().await;
 
 				match response
 				{
@@ -276,7 +280,8 @@ fn get_gameshows(gameshows: &UseStateHandle<Vec<GameShow>>,
 		let message: UseStateHandle<String> = message.clone();
 		spawn_local(async move
 		{
-			match Request::get("http://127.0.0.1:8000/api/gameshows").send().await
+			let url:&str = concat!(PLATFORM_URL!(), "/gameshows");
+			match Request::get(&url).send().await
 			{
 				Ok(resp) if resp.ok() =>
 				{
@@ -308,7 +313,8 @@ fn create_gameshow(gameshow_state: &UseStateHandle<GameShowState>,
 			spawn_local(async move
 			{
 				let gameshow_data: serde_json::Value = serde_json::json!({ "name": gameshow_state.name });
-				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post("http://127.0.0.1:8000/api/gameshows")
+				let url:&str = concat!(PLATFORM_URL!(), "/gameshows");
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
 					.header("Content-Type", "application/json")
 					.body(gameshow_data.to_string())
 					.send().await;
@@ -345,9 +351,8 @@ fn delete_gameshow(message: &UseStateHandle<String>,
 
 			spawn_local(async move
 			{
-				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::delete(
-					&format!("http://127.0.0.1:8000/api/gameshows/{}", id)
-				).send().await;
+				let url:String  = format!(concat!(PLATFORM_URL!(), "/gameshows/{}"), id);
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::delete(&url).send().await;
 
 				match response
 				{
