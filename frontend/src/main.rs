@@ -3,13 +3,13 @@ use serde::{ Deserialize, Serialize };
 use gloo::net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 
+mod web_server;
 mod users;
 
 use crate::users::users::UserState;
 use crate::users::users::*;
 
-macro_rules! PLATFORM_URL { () => { "http://127.0.0.1:8000/api" } }
-//pub(crate) use PLATFORM_URL;
+use crate::web_server::PLATFORM_URL;
 
 fn main()
 {

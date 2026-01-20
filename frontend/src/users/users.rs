@@ -3,8 +3,7 @@ use serde::{ Deserialize, Serialize };
 use gloo::net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 
-//use crate::macros::PLATFORM_URL;
-macro_rules! PLATFORM_URL { () => { "http://127.0.0.1:8000/api" } }
+use crate::web_server::PLATFORM_URL;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserState
