@@ -5,11 +5,14 @@ use wasm_bindgen_futures::spawn_local;
 
 mod web_server;
 mod users;
+mod gameshows;
+
+use crate::web_server::PLATFORM_URL;
 
 use crate::users::users::UserState;
 use crate::users::users::*;
 
-use crate::web_server::PLATFORM_URL;
+use crate::gameshows::gameshows::*;
 
 fn main()
 {
@@ -41,31 +44,6 @@ fn app() -> Html
 	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user, 
 		&gameshow_state, &gameshows, get_gameshows, create_gameshow, delete_gameshow,
 		&contestant_state, create_contestant)
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct GameShow
-{
-	id: i32,
-	name: String,
-}
-
-struct GameShowState
-{
-	name: String,
-	id: Option<i32>,
-}
-
-impl GameShowState
-{
-	fn new(id_in : Option<i32>, name_in : String) -> Self
-	{
-		GameShowState
-		{
-			name : name_in,
-			id : id_in
-		}
-	}
 }
 
 fn get_gameshows(gameshows: &UseStateHandle<Vec<GameShow>>,
