@@ -3,6 +3,10 @@ use serde::{ Deserialize, Serialize };
 use gloo::net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 
+mod users;
+
+use crate::users::users::UserState;
+
 macro_rules! PLATFORM_URL { () => { "http://127.0.0.1:8000/api" } }
 
 fn main()
@@ -17,17 +21,17 @@ fn app() -> Html
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
 	let users: UseStateHandle<Vec<User>> = use_state(Vec::new);
 
-	let gameshow_state : UseStateHandle<GameShowState> = use_state(|| GameShowState { name: "".to_string(), id: None });
-	let gameshows: UseStateHandle<Vec<GameShow>> = use_state(Vec::new);
-	let get_gameshows: Callback<()> = get_gameshows(&gameshows, &message);
-	let create_gameshow: yew::Callback<yew::MouseEvent> = create_gameshow(&gameshow_state, &message, get_gameshows.clone());
-	let delete_gameshow : yew::Callback<i32> = delete_gameshow(&message, get_gameshows.clone());
-
 	let get_users: Callback<()> = get_users(&users, &message);
 	let create_user: yew::Callback<yew::MouseEvent> = create_user(&user_state, &message, get_users.clone());
 	let update_user: Callback<MouseEvent> = update_user(&user_state, &message, get_users.clone());
 	let delete_user: Callback<i32> = delete_user(&message, get_users.clone());
 	let edit_user: Callback<i32> = edit_user(&user_state, &users);
+
+	let gameshow_state : UseStateHandle<GameShowState> = use_state(|| GameShowState { name: "".to_string(), id: None });
+	let gameshows: UseStateHandle<Vec<GameShow>> = use_state(Vec::new);
+	let get_gameshows: Callback<()> = get_gameshows(&gameshows, &message);
+	let create_gameshow: yew::Callback<yew::MouseEvent> = create_gameshow(&gameshow_state, &message, get_gameshows.clone());
+	let delete_gameshow : yew::Callback<i32> = delete_gameshow(&message, get_gameshows.clone());
 
 	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None });
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
@@ -35,40 +39,6 @@ fn app() -> Html
 	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user, 
 		&gameshow_state, &gameshows, get_gameshows, create_gameshow, delete_gameshow,
 		&contestant_state, create_contestant)
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-struct UserState
-{
-	name: String,
-	email: String,
-	account_type: String,
-	id: Option<i32>,
-}
-
-impl UserState
-{
-	fn from_default() -> Self
-	{
-		UserState
-		{
-			name: "".to_string(),
-			email: "".to_string(),
-			account_type: "".to_string(),
-			id: None,
-		}
-	}
-
-	fn new(id_in : Option<i32>, name_in : String, email_in : String, account_type_in : String) -> Self
-	{
-		UserState
-		{
-			name : name_in,
-			email : email_in,
-			account_type : account_type_in,
-			id : id_in,
-		}
-	}
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
