@@ -5,13 +5,14 @@ use wasm_bindgen_futures::spawn_local;
 mod web_server;
 mod users;
 mod gameshows;
+mod contestants;
 
 use crate::web_server::PLATFORM_URL;
 
 use crate::users::users::UserState;
 use crate::users::users::*;
-
 use crate::gameshows::gameshows::*;
+use crate::contestants::contestants::*;
 
 fn main()
 {
@@ -46,24 +47,6 @@ fn app() -> Html
 }
 
 // contestants //
-
-struct ContestantState
-{
-	name: String,
-	id: Option<i32>,
-}
-
-impl ContestantState
-{
-	fn new(id_in : Option<i32>, name_in : String) -> Self
-	{
-		ContestantState
-		{
-			name : name_in,
-			id : id_in
-		}
-	}
-}
 
 fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	message: &UseStateHandle<String>) -> yew::Callback<yew::MouseEvent>
