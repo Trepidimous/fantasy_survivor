@@ -17,9 +17,15 @@ pub struct GameShow
 	pub name: String,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Contestant
+{
+	pub id: Option<i32>,
+	pub name: String,
+}
+
 impl GameShowManager
 {
-
 	pub async fn create(repository : Arc<gameshows_accessor::GameShowRepository>) -> Self
 	{	
 		let game_repository: GameShowManager = GameShowManager
@@ -51,5 +57,20 @@ impl GameShowManager
 	{
 		return self.repo.delete_game_show(id).await;
 	}
-	
+
+	async fn create_contestant(&self, contestant: &Contestant) -> Result<(), String>
+	{
+		return self.repo.create_contestant(contestant).await;
+	}
+
+	async fn collect_all_contestants(&self) -> Result<Vec<Contestant>, String>
+	{
+		return self.repo.collect_all_contestants().await;
+	}
+
+	async fn enter_contestant_onto_show(&self, contestant_id: i32, game_show_id: i32) -> Result<(), String>
+	{
+		return self.repo.enter_contestant_onto_show(contestant_id, game_show_id).await;
+	}
+
 }

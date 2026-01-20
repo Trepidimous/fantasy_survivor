@@ -38,16 +38,6 @@ impl UserRepository
 				&[]
 			).await
 			.expect("Failed to create table");
-
-		self.connector.storage
-			.execute(
-				"CREATE TABLE IF NOT EXISTS game_shows (
-					game_show_id SERIAL PRIMARY KEY,
-					name TEXT DEFAULT 'Jeffs Jamboree'
-				)",
-				&[]
-			).await
-			.expect("Failed to create table");
 	}
 
 	pub async fn collect_users(&self) -> Result<Vec<User>, String>
