@@ -1,5 +1,4 @@
 use yew::prelude::*;
-use serde::{ Deserialize, Serialize };
 use gloo::net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 
@@ -44,106 +43,6 @@ fn app() -> Html
 	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user, 
 		&gameshow_state, &gameshows, get_gameshows, create_gameshow, delete_gameshow,
 		&contestant_state, create_contestant)
-}
-
-fn get_gameshows(gameshows: &UseStateHandle<Vec<GameShow>>,
-	message: &UseStateHandle<String>) -> Callback<()>
-{
-	let gameshows: UseStateHandle<Vec<GameShow>> = gameshows.clone();
-	let message: UseStateHandle<String> = message.clone();
-	Callback::from(move |_|
-	{
-		let gameshows: UseStateHandle<Vec<GameShow>> = gameshows.clone();
-		let message: UseStateHandle<String> = message.clone();
-		spawn_local(async move
-		{
-			let url:&str = concat!(PLATFORM_URL!(), "/gameshows");
-			match Request::get(&url).send().await
-			{
-				Ok(resp) if resp.ok() =>
-				{
-					let fetched_gameshows: Vec<GameShow> = resp.json().await.unwrap_or_default();
-					gameshows.set(fetched_gameshows);
-				}
-
-				_ => message.set("Failed to fetch gameshows".into()),
-			}
-		});
-	})
-}
-
-fn create_gameshow(gameshow_state: &UseStateHandle<GameShowState>,
-	message: &UseStateHandle<String>,
-	get_gameshows: Callback<()>) -> Callback<MouseEvent>
-{
-	return
-	{
-		let gameshow_state: UseStateHandle<GameShowState> = gameshow_state.clone();
-		let message: UseStateHandle<String> = message.clone();
-		let get_gameshows: Callback<()> = get_gameshows.clone();
-		Callback::from(move |_|
-		{
-			let gameshow_state: UseStateHandle<GameShowState> = gameshow_state.clone();
-			let message: UseStateHandle<String> = message.clone();
-			let get_gameshows: Callback<()> = get_gameshows.clone();
-
-			spawn_local(async move
-			{
-				let gameshow_data: serde_json::Value = serde_json::json!({ "name": gameshow_state.name });
-				let url:&str = concat!(PLATFORM_URL!(), "/gameshows");
-				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
-					.header("Content-Type", "application/json")
-					.body(gameshow_data.to_string())
-					.send().await;
-
-				match response
-				{
-					Ok(resp) if resp.ok() =>
-					{
-						message.set("Game Show created successfully".into());
-						get_gameshows.emit(());
-					}
-
-					_ => message.set("Failed to create game show".into()),
-				}
-
-				gameshow_state.set(GameShowState::new(None, "".to_string()));
-			});
-		})
-	};
-}
-
-fn delete_gameshow(message: &UseStateHandle<String>,
-	get_gameshows: Callback<()>) -> Callback<i32>
-{
-	return
-	{
-		let message: UseStateHandle<String> = message.clone();
-		let get_gameshows: Callback<()> = get_gameshows.clone();
-
-		Callback::from(move |id: i32|
-		{
-			let message: UseStateHandle<String> = message.clone();
-			let get_gameshows: Callback<()> = get_gameshows.clone();
-
-			spawn_local(async move
-			{
-				let url:String  = format!(concat!(PLATFORM_URL!(), "/gameshows/{}"), id);
-				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::delete(&url).send().await;
-
-				match response
-				{
-					Ok(resp) if resp.ok() =>
-					{
-						message.set("Game Show deleted successfully".into());
-						get_gameshows.emit(());
-					}
-
-					_ => message.set("Failed to delete gameshow".into()),
-				}
-			});
-		})
-	};
 }
 
 // contestants //
