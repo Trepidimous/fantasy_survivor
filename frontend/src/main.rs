@@ -1,13 +1,9 @@
 use yew::prelude::*;
-use gloo::net::http::Request;
-use wasm_bindgen_futures::spawn_local;
 
 mod web_server;
 mod users;
 mod gameshows;
 mod contestants;
-
-use crate::web_server::PLATFORM_URL;
 
 use crate::users::users::UserState;
 use crate::users::users::*;
@@ -45,46 +41,6 @@ fn app() -> Html
 		&gameshow_state, &gameshows, get_gameshows, create_gameshow, delete_gameshow,
 		&contestant_state, create_contestant)
 }
-
-// contestants //
-
-fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
-	message: &UseStateHandle<String>) -> yew::Callback<yew::MouseEvent>
-{
-	return
-	{
-		let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
-		let message: UseStateHandle<String> = message.clone();
-		Callback::from(move |_|
-		{
-			let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
-			let message: UseStateHandle<String> = message.clone();
-
-			spawn_local(async move
-			{
-				let contestant_data: serde_json::Value = serde_json::json!({ "name": contestant_state.name });
-				let url:&str = concat!(PLATFORM_URL!(), "/contestants");
-				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
-					.header("Content-Type", "application/json")
-					.body(contestant_data.to_string())
-					.send().await;
-
-				match response
-				{
-					Ok(resp) if resp.ok() =>
-					{
-						message.set("Contestant created successfully".into());
-					}
-
-					_ => message.set("Failed to create contestant".into()),
-				}
-
-				contestant_state.set(ContestantState::new(None, "".to_string()));
-			});
-		})
-	};
-}
-
 
 fn print_html(user_state: &UseStateHandle<UserState>,
 	message: &UseStateHandle<String>,

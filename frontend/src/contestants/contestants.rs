@@ -1,4 +1,9 @@
+use yew::prelude::*;
+use serde::{ Deserialize, Serialize };
+use gloo::net::http::Request;
+use wasm_bindgen_futures::spawn_local;
 
+use crate::web_server::PLATFORM_URL;
 
 pub struct ContestantState
 {
@@ -17,3 +22,41 @@ impl ContestantState
 		}
 	}
 }
+
+pub fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
+	message: &UseStateHandle<String>) -> yew::Callback<yew::MouseEvent>
+{
+	return
+	{
+		let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
+		let message: UseStateHandle<String> = message.clone();
+		Callback::from(move |_|
+		{
+			let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
+			let message: UseStateHandle<String> = message.clone();
+
+			spawn_local(async move
+			{
+				let contestant_data: serde_json::Value = serde_json::json!({ "name": contestant_state.name });
+				let url:&str = concat!(PLATFORM_URL!(), "/contestants");
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
+					.header("Content-Type", "application/json")
+					.body(contestant_data.to_string())
+					.send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set("Contestant created successfully".into());
+					}
+
+					_ => message.set("Failed to create contestant".into()),
+				}
+
+				contestant_state.set(ContestantState::new(None, "".to_string()));
+			});
+		})
+	};
+}
+
