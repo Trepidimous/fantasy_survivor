@@ -43,7 +43,7 @@ async fn rocket() -> _
 		.manage(gameshow_manager)
 		.mount("/", routes![	add_user, collect_users, update_user, delete_user,
 									collect_gameshows, add_gameshow, delete_gameshow,
-									create_contestant])
+									create_contestant, collect_contestants])
 		.attach(cors)
 }
 
@@ -110,4 +110,12 @@ async fn create_contestant(
 	) -> Result<(), String>
 {
 	return manager.create_contestant(&contestant).await.map_err(|e: String| e);
+}
+
+#[get("/api/contestants")]
+async fn collect_contestants(
+	manager : &State<GameShowManager>
+	) -> Result<Json<Vec<Contestant>>, Custom<String>>
+{
+	return manager.collect_all_contestants().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }

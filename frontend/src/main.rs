@@ -399,20 +399,20 @@ fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 {
 	return
 	{
-		let gameshow_state: UseStateHandle<ContestantState> = contestant_state.clone();
+		let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
 		let message: UseStateHandle<String> = message.clone();
 		Callback::from(move |_|
 		{
-			let gameshow_state: UseStateHandle<ContestantState> = gameshow_state.clone();
+			let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
 			let message: UseStateHandle<String> = message.clone();
 
 			spawn_local(async move
 			{
-				let gameshow_data: serde_json::Value = serde_json::json!({ "name": gameshow_state.name });
-				let url:&str = concat!(PLATFORM_URL!(), "/gameshows");
+				let contestant_data: serde_json::Value = serde_json::json!({ "name": contestant_state.name });
+				let url:&str = concat!(PLATFORM_URL!(), "/contestants");
 				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
 					.header("Content-Type", "application/json")
-					.body(gameshow_data.to_string())
+					.body(contestant_data.to_string())
 					.send().await;
 
 				match response
@@ -425,7 +425,7 @@ fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 					_ => message.set("Failed to create contestant".into()),
 				}
 
-				gameshow_state.set(ContestantState::new(None, "".to_string()));
+				contestant_state.set(ContestantState::new(None, "".to_string()));
 			});
 		})
 	};

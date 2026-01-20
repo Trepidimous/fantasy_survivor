@@ -27,7 +27,6 @@ impl GameShowRepository
 
 	async fn initialize_storage(&self) -> ()
 	{
-
 		self.connector.storage
 			.execute(
 				"CREATE TABLE IF NOT EXISTS game_shows (
