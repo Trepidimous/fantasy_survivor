@@ -13,7 +13,7 @@ use rocket::{ State, response::status::Custom, http::Status };
 use rocket_cors::{ CorsOptions, AllowedOrigins };
 
 use crate::utilities::storage::StorageConnector;
-use crate::gameshow_manager::{GameShow, GameShowManager};
+use crate::gameshow_manager::{Contestant, GameShow, GameShowManager};
 use crate::user_manager::User;
 use crate::user_manager::UserManager;
 
@@ -41,7 +41,9 @@ async fn rocket() -> _
 	rocket::build()
 		.manage(user_manager)
 		.manage(gameshow_manager)
-		.mount("/", routes![add_user, collect_users, update_user, delete_user, collect_gameshows, add_gameshow, delete_gameshow])
+		.mount("/", routes![	add_user, collect_users, update_user, delete_user,
+									collect_gameshows, add_gameshow, delete_gameshow,
+									create_contestant])
 		.attach(cors)
 }
 
@@ -99,4 +101,13 @@ async fn add_gameshow(
 async fn delete_gameshow(manager : &State<GameShowManager>, id: i32) -> Result<Json<Vec<GameShow>>, Custom<String>>
 {
 	return manager.delete_gameshow_and_refresh(id).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+}
+
+#[post("/api/contestants", data = "<contestant>")]
+async fn create_contestant(
+	manager : &State<GameShowManager>,
+	contestant: Json<Contestant>
+	) -> Result<(), String>
+{
+	return manager.create_contestant(&contestant).await.map_err(|e: String| e);
 }

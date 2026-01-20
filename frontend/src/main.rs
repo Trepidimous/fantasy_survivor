@@ -29,7 +29,12 @@ fn app() -> Html
 	let delete_user: Callback<i32> = delete_user(&message, get_users.clone());
 	let edit_user: Callback<i32> = edit_user(&user_state, &users);
 
-	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user, &gameshow_state, &gameshows, get_gameshows, create_gameshow, delete_gameshow)
+	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None });
+	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
+
+	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user, 
+		&gameshow_state, &gameshows, get_gameshows, create_gameshow, delete_gameshow,
+		&contestant_state, create_contestant)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -369,20 +374,82 @@ fn delete_gameshow(message: &UseStateHandle<String>,
 	};
 }
 
+// contestants //
+
+struct ContestantState
+{
+	name: String,
+	id: Option<i32>,
+}
+
+impl ContestantState
+{
+	fn new(id_in : Option<i32>, name_in : String) -> Self
+	{
+		ContestantState
+		{
+			name : name_in,
+			id : id_in
+		}
+	}
+}
+
+fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
+	message: &UseStateHandle<String>) -> yew::Callback<yew::MouseEvent>
+{
+	return
+	{
+		let gameshow_state: UseStateHandle<ContestantState> = contestant_state.clone();
+		let message: UseStateHandle<String> = message.clone();
+		Callback::from(move |_|
+		{
+			let gameshow_state: UseStateHandle<ContestantState> = gameshow_state.clone();
+			let message: UseStateHandle<String> = message.clone();
+
+			spawn_local(async move
+			{
+				let gameshow_data: serde_json::Value = serde_json::json!({ "name": gameshow_state.name });
+				let url:&str = concat!(PLATFORM_URL!(), "/gameshows");
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
+					.header("Content-Type", "application/json")
+					.body(gameshow_data.to_string())
+					.send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set("Contestant created successfully".into());
+					}
+
+					_ => message.set("Failed to create contestant".into()),
+				}
+
+				gameshow_state.set(ContestantState::new(None, "".to_string()));
+			});
+		})
+	};
+}
+
 
 fn print_html(user_state: &UseStateHandle<UserState>,
 	message: &UseStateHandle<String>,
+	// users
 	users: &UseStateHandle<Vec<User>>,
 	get_users: Callback<()>,
 	create_user: yew::Callback<yew::MouseEvent>,
 	update_user: Callback<MouseEvent>,
 	delete_user: Callback<i32>,
 	edit_user: Callback<i32>,
+	// game shows //
 	gameshow_state : &UseStateHandle<GameShowState>,
 	gameshows: &UseStateHandle<Vec<GameShow>>,
 	get_gameshows: Callback<()>,
 	create_gameshow: yew::Callback<yew::MouseEvent>,
 	delete_gameshow : yew::Callback<i32>,
+	// contestants //
+	contestant_state : &UseStateHandle<ContestantState>,
+	create_contestant : yew::Callback<MouseEvent>
 ) -> Html
 {
 	html!
@@ -450,6 +517,37 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 						}
 					})}
 					</ul>
+
+					<input placeholder="Full Name of Contestant"
+						value={contestant_state.name.clone()}
+						oninput={Callback::from(
+						{
+							let contestant_state_clone = contestant_state.clone();
+							move |e: InputEvent|
+							{
+								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+
+								let edited_contestant = ContestantState::new(
+									contestant_state_clone.id,
+									input.value()
+								);
+
+								contestant_state_clone.set(edited_contestant);
+							}
+						})}
+						class="border rounded px-4 py-2 mr-2"
+					/>
+
+					<button
+						onclick=
+						{
+							create_contestant.clone()
+						}
+						class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+						{
+							"Create Contestant"
+						}
+					</button>
 
 					<div class="mb-4">
 
