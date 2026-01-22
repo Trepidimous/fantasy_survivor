@@ -10,6 +10,10 @@ use crate::users::users::*;
 use crate::gameshows::gameshows::*;
 use crate::contestants::contestants::*;
 
+use web_sys::console;
+use wasm_bindgen::JsValue;
+use web_sys::{js_sys::Array};
+
 fn main()
 {
 	yew::Renderer::<App>::new().render();
@@ -62,6 +66,23 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 	create_contestant : yew::Callback<MouseEvent>
 ) -> Html
 {
+
+	let onchange: Callback<Event> =
+	{
+		Callback::from(move |e: Event|
+		{
+			let input: web_sys::HtmlSelectElement = e.target_unchecked_into();
+			let value = input.value();
+			// Handle selection logic here
+
+			let output : String = "Selected ShowSeason ID: ".to_string() + &value;
+			let js_value = JsValue::from_str(&output);
+			let arr = Array::new();
+			arr.push(&js_value);
+			web_sys::console::log(&arr);
+		})
+	};
+
 	html!
 	{
 		<body class="bg-[#121212]  min-h-screen">
@@ -70,10 +91,10 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 					<button
 						onclick={get_gameshows.reform(|_| ())}
 						class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
-						{ "Fetch Game Shows" }
+						{ "Fetch Game Show Seasons" }
 					</button>
 
-					<input placeholder="New Game Show Name"
+					<input placeholder="New Game Show Season Name"
 						value={gameshow_state.name.clone()}
 						oninput={Callback::from(
 						{
@@ -100,7 +121,7 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 						}
 						class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 						{ 
-							"Create Game Show"
+							"Create Game Show Season"
 						}
 					</button>
 
@@ -127,6 +148,26 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 						}
 					})}
 					</ul>
+
+					<div class="mb-4">
+						<select {onchange}>
+							<option value="" disabled=true selected=true>{"Select a show season"}</option>
+							{
+								// 2. Iterate over the vector and map to options
+								gameshows.iter().map(|show|
+								{
+									html!
+									{
+										<option key={show.id} value={show.id.to_string()}>
+										{
+											&show.name
+										}
+										</option>
+									}
+								}).collect::<Html>()
+							}
+						</select>
+					</div>
 
 					<input placeholder="Full Name of Contestant"
 						value={contestant_state.name.clone()}
@@ -160,7 +201,6 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 					</button>
 
 					<div class="mb-4">
-
 						<input placeholder="Name"
 							value={user_state.name.clone()}
 							oninput={Callback::from(

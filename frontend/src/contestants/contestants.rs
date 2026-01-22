@@ -1,5 +1,4 @@
 use yew::prelude::*;
-use serde::{ Deserialize, Serialize };
 use gloo::net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 
