@@ -10,7 +10,6 @@ use crate::users::users::*;
 use crate::gameshows::gameshows::*;
 use crate::contestants::contestants::*;
 
-use web_sys::console;
 use wasm_bindgen::JsValue;
 use web_sys::{js_sys::Array};
 
