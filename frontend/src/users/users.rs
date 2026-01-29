@@ -217,3 +217,28 @@ pub fn edit_user(user_state : &UseStateHandle<UserState>, users : &UseStateHandl
 	};
 }
 
+pub struct UserSystem
+{
+	pub user_state: UseStateHandle<UserState>,
+	pub users: UseStateHandle<Vec<User>>,
+	pub get_users: Callback<()>,
+	pub create_user: yew::Callback<yew::MouseEvent>,
+	pub update_user: Callback<MouseEvent>,
+	pub delete_user: Callback<i32>,
+	pub edit_user: Callback<i32>,
+}
+
+#[hook]
+pub fn use_compile_user_system(message: UseStateHandle<String>) -> UserSystem
+{
+	let user_state: UseStateHandle<UserState> = use_state(|| UserState::from_default());
+	let users: UseStateHandle<Vec<User>> = use_state(Vec::new);
+
+	let get_users: Callback<()> = get_users(&users, &message);
+	let create_user: yew::Callback<yew::MouseEvent> = create_user(&user_state, &message, get_users.clone());
+	let update_user: Callback<MouseEvent> = update_user(&user_state, &message, get_users.clone());
+	let delete_user: Callback<i32> = delete_user(&message, get_users.clone());
+	let edit_user: Callback<i32> = edit_user(&user_state, &users);
+
+	return UserSystem { user_state, users, get_users, create_user, update_user, delete_user, edit_user };
+}

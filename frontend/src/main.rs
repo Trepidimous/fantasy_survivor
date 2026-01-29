@@ -22,15 +22,7 @@ fn main()
 #[function_component(App)]
 fn app() -> Html
 {
-	let user_state: UseStateHandle<UserState> = use_state(|| UserState::from_default());
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
-	let users: UseStateHandle<Vec<User>> = use_state(Vec::new);
-
-	let get_users: Callback<()> = get_users(&users, &message);
-	let create_user: yew::Callback<yew::MouseEvent> = create_user(&user_state, &message, get_users.clone());
-	let update_user: Callback<MouseEvent> = update_user(&user_state, &message, get_users.clone());
-	let delete_user: Callback<i32> = delete_user(&message, get_users.clone());
-	let edit_user: Callback<i32> = edit_user(&user_state, &users);
 
 	let gameshow_state : UseStateHandle<GameShowState> = use_state(|| GameShowState { name: "".to_string(), id: None });
 	let gameshows: UseStateHandle<Vec<GameShow>> = use_state(Vec::new);
@@ -41,20 +33,16 @@ fn app() -> Html
 	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None });
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
 
-	print_html(&user_state, &message, &users, get_users, create_user, update_user, delete_user, edit_user, 
+	let user_system = users::users::use_compile_user_system(message.clone());
+
+	print_html(&user_system, &message,
 		&gameshow_state, &gameshows, get_gameshows, create_gameshow, delete_gameshow,
 		&contestant_state, create_contestant)
 }
 
-fn print_html(user_state: &UseStateHandle<UserState>,
+fn print_html(
+	user_system : &UserSystem,
 	message: &UseStateHandle<String>,
-	// users
-	users: &UseStateHandle<Vec<User>>,
-	get_users: Callback<()>,
-	create_user: yew::Callback<yew::MouseEvent>,
-	update_user: Callback<MouseEvent>,
-	delete_user: Callback<i32>,
-	edit_user: Callback<i32>,
 	// game shows //
 	gameshow_state : &UseStateHandle<GameShowState>,
 	gameshows: &UseStateHandle<Vec<GameShow>>,
@@ -135,7 +123,7 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 								<li class="mb-2">
 								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}", gameshow.id, gameshow.name) }</span>
 								<button
-									onclick={edit_user.clone().reform(move |_| gameshow_id)}
+									onclick={user_system.edit_user.clone().reform(move |_| gameshow_id)}
 									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
 									{ "Select" }
 								</button>
@@ -202,10 +190,10 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 
 					<div class="mb-4">
 						<input placeholder="Name"
-							value={user_state.name.clone()}
+							value={user_system.user_state.name.clone()}
 							oninput={Callback::from(
 							{
-								let user_state_clone = user_state.clone();
+								let user_state_clone = user_system.user_state.clone();
 								move |e: InputEvent|
 								{
 									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
@@ -222,10 +210,10 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 							})}
 							class="border rounded px-4 py-2 mr-2"/>
 						<input placeholder="Email"
-							value={user_state.email.clone()}
+							value={user_system.user_state.email.clone()}
 							oninput={Callback::from(
 							{
-								let user_state_clone = user_state.clone();
+								let user_state_clone = user_system.user_state.clone();
 								move |e: InputEvent|
 								{
 									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
@@ -245,18 +233,18 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 						<button
 							onclick=
 							{
-								if user_state.id.is_some()
+								if user_system.user_state.id.is_some()
 								{
-									update_user.clone()
+									user_system.update_user.clone()
 								}
 								else
 								{
-									create_user.clone()
+									user_system.create_user.clone()
 								}
 							}
 							class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 							{ 
-								if user_state.id.is_some()
+								if user_system.user_state.id.is_some()
 								{
 									"Update User"
 								}
@@ -274,7 +262,7 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 					</div>
 
 					<button
-						onclick={get_users.reform(|_| ())}
+						onclick={user_system.get_users.reform(|_| ())}
 						class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
 						{ "Fetch User List" }
 					</button>
@@ -283,7 +271,7 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 
 					<ul class="list-disc pl-5">
 					{
-						for (*users).iter().map(|user|
+						for (*user_system.users).iter().map(|user|
 						{
 							let user_id = user.id;
 							html!
@@ -291,12 +279,12 @@ fn print_html(user_state: &UseStateHandle<UserState>,
 								<li class="mb-2">
 								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}, Email: {} AccountType: {} ", user.id, user.name, user.email, user.account_type) }</span>
 								<button
-									onclick={edit_user.clone().reform(move |_| user_id)}
+									onclick={user_system.edit_user.clone().reform(move |_| user_id)}
 									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
 									{ "Edit" }
 								</button>
 								<button
-									onclick={delete_user.clone().reform(move |_| user_id)}
+									onclick={user_system.delete_user.clone().reform(move |_| user_id)}
 									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
 									{ "Delete" }
 								</button>
