@@ -28,6 +28,15 @@ impl GameShowState
 			id : id_in
 		}
 	}
+
+	pub fn from_default() -> Self
+	{
+		GameShowState
+		{
+			name: "".to_string(),
+			id: None,
+		}
+	}
 }
 
 pub fn get_gameshows(gameshows: &UseStateHandle<Vec<GameShow>>,
@@ -128,4 +137,26 @@ pub fn delete_gameshow(message: &UseStateHandle<String>,
 			});
 		})
 	};
+}
+
+pub struct GameShowSystem
+{
+	pub gameshow_state: UseStateHandle<GameShowState>,
+	pub gameshows: UseStateHandle<Vec<GameShow>>,
+	pub get_gameshows: Callback<()>,
+	pub create_gameshow: yew::Callback<yew::MouseEvent>,
+	pub delete_gameshow: Callback<i32>,
+}
+
+#[hook]
+pub fn use_compile_gameshow_system(message: UseStateHandle<String>) -> GameShowSystem
+{
+	let gameshow_state: UseStateHandle<GameShowState> = use_state(|| GameShowState::from_default());
+	let gameshows: UseStateHandle<Vec<GameShow>> = use_state(Vec::new);
+
+	let get_gameshows: Callback<()> = get_gameshows(&gameshows, &message);
+	let create_gameshow: yew::Callback<yew::MouseEvent> = create_gameshow(&gameshow_state, &message, get_gameshows.clone());
+	let delete_gameshow: Callback<i32> = delete_gameshow(&message, get_gameshows.clone());
+
+	return GameShowSystem { gameshow_state, gameshows, get_gameshows, create_gameshow, delete_gameshow };
 }

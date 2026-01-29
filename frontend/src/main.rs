@@ -23,32 +23,21 @@ fn app() -> Html
 {
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
 
-	let gameshow_state : UseStateHandle<GameShowState> = use_state(|| GameShowState { name: "".to_string(), id: None });
-	let gameshows: UseStateHandle<Vec<GameShow>> = use_state(Vec::new);
-	let get_gameshows: Callback<()> = get_gameshows(&gameshows, &message);
-	let create_gameshow: yew::Callback<yew::MouseEvent> = create_gameshow(&gameshow_state, &message, get_gameshows.clone());
-	let delete_gameshow : yew::Callback<i32> = delete_gameshow(&message, get_gameshows.clone());
-
 	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None });
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
 
 	let user_system = users::users::use_compile_user_system(message.clone());
+	let gameshow_system = gameshows::gameshows::use_compile_gameshow_system(message.clone());
 
 	print_html(&user_system, &message,
-		&gameshow_state, &gameshows, get_gameshows, create_gameshow, delete_gameshow,
+		&gameshow_system,
 		&contestant_state, create_contestant)
 }
 
 fn print_html(
 	user_system : &UserSystem,
 	message: &UseStateHandle<String>,
-	// game shows //
-	gameshow_state : &UseStateHandle<GameShowState>,
-	gameshows: &UseStateHandle<Vec<GameShow>>,
-	get_gameshows: Callback<()>,
-	create_gameshow: yew::Callback<yew::MouseEvent>,
-	delete_gameshow : yew::Callback<i32>,
-	// contestants //
+	gameshow_system : &GameShowSystem,
 	contestant_state : &UseStateHandle<ContestantState>,
 	create_contestant : yew::Callback<MouseEvent>
 ) -> Html
@@ -76,16 +65,16 @@ fn print_html(
 			<div class="container mx-auto p-4">
 				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
 					<button
-						onclick={get_gameshows.reform(|_| ())}
+						onclick={gameshow_system.get_gameshows.reform(|_| ())}
 						class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
 						{ "Fetch Game Show Seasons" }
 					</button>
 
 					<input placeholder="New Game Show Season Name"
-						value={gameshow_state.name.clone()}
+						value={gameshow_system.gameshow_state.name.clone()}
 						oninput={Callback::from(
 						{
-							let gameshow_state_clone = gameshow_state.clone();
+							let gameshow_state_clone = gameshow_system.gameshow_state.clone();
 							move |e: InputEvent|
 							{
 								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
@@ -104,7 +93,7 @@ fn print_html(
 					<button
 						onclick=
 						{
-							create_gameshow.clone()
+							gameshow_system.create_gameshow.clone()
 						}
 						class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 						{ 
@@ -114,7 +103,7 @@ fn print_html(
 
 					<ul class="list-disc pl-5">
 					{
-						for (*gameshows).iter().map(|gameshow|
+						for (*gameshow_system.gameshows).iter().map(|gameshow|
 						{
 							let gameshow_id = gameshow.id;
 							html!
@@ -127,7 +116,7 @@ fn print_html(
 									{ "Select" }
 								</button>
 								<button
-									onclick={delete_gameshow.clone().reform(move |_| gameshow_id)}
+									onclick={gameshow_system.delete_gameshow.clone().reform(move |_| gameshow_id)}
 									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
 									{ "Delete" }
 								</button>
@@ -141,7 +130,7 @@ fn print_html(
 							<option value="" disabled=true selected=true>{"Select a show season"}</option>
 							{
 								// 2. Iterate over the vector and map to options
-								gameshows.iter().map(|show|
+								gameshow_system.gameshows.iter().map(|show|
 								{
 									html!
 									{
