@@ -29,14 +29,14 @@ fn app() -> Html
 	let user_system = users::users::use_compile_user_system(message.clone());
 	let gameshow_system = gameshows::gameshows::use_compile_gameshow_system(message.clone());
 
-	print_html(&user_system, &message,
+	print_html(&message, &user_system,
 		&gameshow_system,
 		&contestant_state, create_contestant)
 }
 
 fn print_html(
-	user_system : &UserSystem,
 	message: &UseStateHandle<String>,
+	user_system : &UserSystem,
 	gameshow_system : &GameShowSystem,
 	contestant_state : &UseStateHandle<ContestantState>,
 	create_contestant : yew::Callback<MouseEvent>
