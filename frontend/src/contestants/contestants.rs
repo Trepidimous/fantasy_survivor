@@ -131,3 +131,23 @@ pub fn enroll_contestant_onto_show(
 		})
 	};
 }
+
+pub struct ContestantSystem
+{
+	pub contestant_state : UseStateHandle<ContestantState>,
+	pub create_contestant: yew::Callback<yew::MouseEvent>,
+	pub delete_contestant: Callback<String>,
+	pub enroll_contestant_onto_show: Callback<yew::MouseEvent>,
+}
+
+#[hook]
+pub fn use_compile_contestant_system(message: UseStateHandle<String>) -> ContestantSystem
+{
+	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None, id_showseason: None });
+
+	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
+	let delete_contestant : Callback<String> = delete_contestant(&contestant_state, &message);
+	let enroll_contestant_onto_show : Callback<yew::MouseEvent> = enroll_contestant_onto_show(&contestant_state, &message);
+
+	return ContestantSystem { contestant_state, create_contestant, delete_contestant, enroll_contestant_onto_show };
+}

@@ -21,27 +21,20 @@ fn app() -> Html
 {
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
 
-	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None, id_showseason: None });
-	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
-	let delete_contestant : Callback<String> = delete_contestant(&contestant_state, &message);
-	let enroll_contestant_onto_show : Callback<yew::MouseEvent> = enroll_contestant_onto_show(&contestant_state, &message);
-
 	let user_system = users::users::use_compile_user_system(message.clone());
 	let gameshow_system = gameshows::gameshows::use_compile_gameshow_system(message.clone());
+	let contestant_system = contestants::contestants::use_compile_contestant_system(message.clone());
 
 	build_website(&message, &user_system,
 		&gameshow_system,
-		&contestant_state, create_contestant, delete_contestant, enroll_contestant_onto_show)
+		&contestant_system)
 }
 
 fn build_website(
 	message: &UseStateHandle<String>,
 	user_system : &UserSystem,
 	gameshow_system : &GameShowSystem,
-	contestant_state : &UseStateHandle<ContestantState>,
-	create_contestant : yew::Callback<MouseEvent>,
-	delete_contestant : Callback<String>,
-	enroll_contestant_onto_show : Callback<yew::MouseEvent>
+	contestant_system : &ContestantSystem
 ) -> Html
 {
 
@@ -54,10 +47,7 @@ fn build_website(
 				build_showseason_mangement(
 					message,
 					gameshow_system,
-					contestant_state,
-					create_contestant,
-					delete_contestant,
-					enroll_contestant_onto_show)
+					contestant_system)
 			}
 
 			{
@@ -74,10 +64,7 @@ fn build_website(
 fn build_showseason_mangement(
 	message: &UseStateHandle<String>,
 	gameshow_system : &GameShowSystem,
-	contestant_state : &UseStateHandle<ContestantState>,
-	create_contestant : yew::Callback<MouseEvent>,
-	delete_contestant : Callback<String>,
-	enroll_contestant_onto_show : Callback<yew::MouseEvent>
+	contestant_system : &ContestantSystem
 ) -> Html
 {
 
@@ -173,10 +160,10 @@ fn build_showseason_mangement(
 			</div>
 
 			<input placeholder="Full Name of Contestant"
-				value={contestant_state.name.clone()}
+				value={contestant_system.contestant_state.name.clone()}
 				oninput={Callback::from(
 				{
-					let contestant_state_clone = contestant_state.clone();
+					let contestant_state_clone = contestant_system.contestant_state.clone();
 					move |e: InputEvent|
 					{
 						let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
@@ -196,7 +183,7 @@ fn build_showseason_mangement(
 			<button
 				onclick=
 				{
-					create_contestant.clone()
+					contestant_system.create_contestant.clone()
 				}
 				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 				{
@@ -205,9 +192,9 @@ fn build_showseason_mangement(
 			</button>
 
 			<button
-				onclick={delete_contestant.clone().reform(
+				onclick={contestant_system.delete_contestant.clone().reform(
 				{
-					let contestant_state_clone = contestant_state.clone();
+					let contestant_state_clone = contestant_system.contestant_state.clone();
 					move |_| contestant_state_clone.name.clone()
 				})}
 
@@ -220,7 +207,7 @@ fn build_showseason_mangement(
 			<button
 				onclick=
 				{
-					enroll_contestant_onto_show.clone()
+					contestant_system.enroll_contestant_onto_show.clone()
 				}
 
 				class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
