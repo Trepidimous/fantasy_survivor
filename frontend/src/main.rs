@@ -96,108 +96,108 @@ fn build_showseason_mangement(
 	html!
 	{
 		<>
-					<button
-						onclick={gameshow_system.get_gameshows.reform(|_| ())}
-						class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
-						{ "Fetch Game Show Seasons" }
-					</button>
+			<button
+				onclick={gameshow_system.get_gameshows.reform(|_| ())}
+				class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
+				{ "Fetch Game Show Seasons" }
+			</button>
 
-					<input placeholder="New Game Show Season Name"
-						value={gameshow_system.gameshow_state.name.clone()}
-						oninput={Callback::from(
-						{
-							let gameshow_state_clone = gameshow_system.gameshow_state.clone();
-							move |e: InputEvent|
-							{
-								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-
-								let edited_gameshow = GameShowState::new(
-									gameshow_state_clone.id,
-									input.value()
-								);
-
-								gameshow_state_clone.set(edited_gameshow);
-							}
-						})}
-						class="border rounded px-4 py-2 mr-2"
-					/>
-
-					<button
-						onclick=
-						{
-							gameshow_system.create_gameshow.clone()
-						}
-						class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-						{ 
-							"Create Game Show Season"
-						}
-					</button>
-
-					<ul class="list-disc pl-5">
+			<input placeholder="New Game Show Season Name"
+				value={gameshow_system.gameshow_state.name.clone()}
+				oninput={Callback::from(
+				{
+					let gameshow_state_clone = gameshow_system.gameshow_state.clone();
+					move |e: InputEvent|
 					{
-						for (*gameshow_system.gameshows).iter().map(|gameshow|
+						let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+
+						let edited_gameshow = GameShowState::new(
+							gameshow_state_clone.id,
+							input.value()
+						);
+
+						gameshow_state_clone.set(edited_gameshow);
+					}
+				})}
+				class="border rounded px-4 py-2 mr-2"
+			/>
+
+			<button
+				onclick=
+				{
+					gameshow_system.create_gameshow.clone()
+				}
+				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+				{ 
+					"Create Game Show Season"
+				}
+			</button>
+
+			<ul class="list-disc pl-5">
+			{
+				for (*gameshow_system.gameshows).iter().map(|gameshow|
+				{
+					let gameshow_id = gameshow.id;
+					html!
+					{
+						<li class="mb-2">
+						<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}", gameshow.id, gameshow.name) }</span>
+						
+						//<button
+						//	onclick={user_system.edit_user.clone().reform(move |_| gameshow_id)}
+						//	class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
+						//	{ "Select" }
+						//</button>
+
+						<button
+							onclick={gameshow_system.delete_gameshow.clone().reform(move |_| gameshow_id)}
+							class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+							{ "Delete" }
+						</button>
+					</li>
+					}
+			})}
+			</ul>
+
+			<div class="mb-4">
+				<select {onchange}>
+					<option value="" disabled=true selected=true>{"Select a show season"}</option>
+					{
+						// 2. Iterate over the vector and map to options
+						gameshow_system.gameshows.iter().map(|show|
 						{
-							let gameshow_id = gameshow.id;
 							html!
 							{
-								<li class="mb-2">
-								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}", gameshow.id, gameshow.name) }</span>
-								
-								//<button
-								//	onclick={user_system.edit_user.clone().reform(move |_| gameshow_id)}
-								//	class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
-								//	{ "Select" }
-								//</button>
-
-								<button
-									onclick={gameshow_system.delete_gameshow.clone().reform(move |_| gameshow_id)}
-									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-									{ "Delete" }
-								</button>
-							</li>
-							}
-					})}
-					</ul>
-
-					<div class="mb-4">
-						<select {onchange}>
-							<option value="" disabled=true selected=true>{"Select a show season"}</option>
-							{
-								// 2. Iterate over the vector and map to options
-								gameshow_system.gameshows.iter().map(|show|
+								<option key={show.id} value={show.id.to_string()}>
 								{
-									html!
-									{
-										<option key={show.id} value={show.id.to_string()}>
-										{
-											&show.name
-										}
-										</option>
-									}
-								}).collect::<Html>()
+									&show.name
+								}
+								</option>
 							}
-						</select>
-					</div>
+						}).collect::<Html>()
+					}
+				</select>
+			</div>
 
-					<input placeholder="Full Name of Contestant"
-						value={contestant_state.name.clone()}
-						oninput={Callback::from(
-						{
-							let contestant_state_clone = contestant_state.clone();
-							move |e: InputEvent|
-							{
-								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+			<input placeholder="Full Name of Contestant"
+				value={contestant_state.name.clone()}
+				oninput={Callback::from(
+				{
+					let contestant_state_clone = contestant_state.clone();
+					move |e: InputEvent|
+					{
+						let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
 
-								let edited_contestant = ContestantState::new(
-									contestant_state_clone.id,
-									input.value()
-								);
+						let edited_contestant = ContestantState::new(
+							contestant_state_clone.id,
+							input.value()
+						);
 
-								contestant_state_clone.set(edited_contestant);
-							}
-						})}
-						class="border rounded px-4 py-2 mr-2"
-					/>
+						contestant_state_clone.set(edited_contestant);
+					}
+				})}
+				class="border rounded px-4 py-2 mr-2"
+			/>
 
 			<button
 				onclick=
