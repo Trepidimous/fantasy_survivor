@@ -29,12 +29,12 @@ fn app() -> Html
 	let user_system = users::users::use_compile_user_system(message.clone());
 	let gameshow_system = gameshows::gameshows::use_compile_gameshow_system(message.clone());
 
-	print_html(&message, &user_system,
+	build_website(&message, &user_system,
 		&gameshow_system,
 		&contestant_state, create_contestant)
 }
 
-fn print_html(
+fn build_website(
 	message: &UseStateHandle<String>,
 	user_system : &UserSystem,
 	gameshow_system : &GameShowSystem,
@@ -121,7 +121,7 @@ fn print_html(
 									{ "Delete" }
 								</button>
 							</li>
-						}
+							}
 					})}
 					</ul>
 
@@ -145,142 +145,163 @@ fn print_html(
 						</select>
 					</div>
 
-					<input placeholder="Full Name of Contestant"
-						value={contestant_state.name.clone()}
-						oninput={Callback::from(
-						{
-							let contestant_state_clone = contestant_state.clone();
-							move |e: InputEvent|
-							{
-								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+					{ build_user_management(
+						message,
+						user_system,
+						contestant_state,
+						create_contestant
+					) }
 
-								let edited_contestant = ContestantState::new(
-									contestant_state_clone.id,
-									input.value()
-								);
-
-								contestant_state_clone.set(edited_contestant);
-							}
-						})}
-						class="border rounded px-4 py-2 mr-2"
-					/>
-
-					<button
-						onclick=
-						{
-							create_contestant.clone()
-						}
-						class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-						{
-							"Create Contestant"
-						}
-					</button>
-
-					<div class="mb-4">
-						<input placeholder="Name"
-							value={user_system.user_state.name.clone()}
-							oninput={Callback::from(
-							{
-								let user_state_clone = user_system.user_state.clone();
-								move |e: InputEvent|
-								{
-									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-
-									let edited_user = UserState::new(
-										user_state_clone.id,
-										input.value(),
-										user_state_clone.email.clone(),
-										user_state_clone.account_type.clone()
-									 );
-
-									user_state_clone.set(edited_user);
-								}
-							})}
-							class="border rounded px-4 py-2 mr-2"/>
-						<input placeholder="Email"
-							value={user_system.user_state.email.clone()}
-							oninput={Callback::from(
-							{
-								let user_state_clone = user_system.user_state.clone();
-								move |e: InputEvent|
-								{
-									let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-
-									let edited_user = UserState::new(
-										user_state_clone.id,
-										user_state_clone.name.clone(),
-										input.value(),
-										user_state_clone.account_type.clone()
-										);
-
-									user_state_clone.set(edited_user);
-								}
-							})}
-							class="border rounded px-4 py-2 mr-2"/>
-
-						<button
-							onclick=
-							{
-								if user_system.user_state.id.is_some()
-								{
-									user_system.update_user.clone()
-								}
-								else
-								{
-									user_system.create_user.clone()
-								}
-							}
-							class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-							{ 
-								if user_system.user_state.id.is_some()
-								{
-									"Update User"
-								}
-								else
-								{ 
-									"Create User"
-								}
-							}
-						</button>
-
-						if !message.is_empty()
-						{
-							<p class="text-green-500 mt-2">{ &**message }</p>
-						}
-					</div>
-
-					<button
-						onclick={user_system.get_users.reform(|_| ())}
-						class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
-						{ "Fetch User List" }
-					</button>
-
-					<h2 class="text-2xl font-bold text-[#FF8C00] mb-2">{ "User List" }</h2>
-
-					<ul class="list-disc pl-5">
-					{
-						for (*user_system.users).iter().map(|user|
-						{
-							let user_id = user.id;
-							html!
-							{
-								<li class="mb-2">
-								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}, Email: {} AccountType: {} ", user.id, user.name, user.email, user.account_type) }</span>
-								<button
-									onclick={user_system.edit_user.clone().reform(move |_| user_id)}
-									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
-									{ "Edit" }
-								</button>
-								<button
-									onclick={user_system.delete_user.clone().reform(move |_| user_id)}
-									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-									{ "Delete" }
-								</button>
-							</li>
-						}
-					})}
-					</ul>
 			</div>
 		</body>
+	}
+}
+
+fn build_user_management(
+	message: &UseStateHandle<String>,
+	user_system : &UserSystem,
+	contestant_state : &UseStateHandle<ContestantState>,
+	create_contestant : yew::Callback<MouseEvent>
+) -> Html
+{
+	html!
+	{
+		<>
+			<input placeholder="Full Name of Contestant"
+				value={contestant_state.name.clone()}
+				oninput={Callback::from(
+				{
+					let contestant_state_clone = contestant_state.clone();
+					move |e: InputEvent|
+					{
+						let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+
+						let edited_contestant = ContestantState::new(
+							contestant_state_clone.id,
+							input.value()
+						);
+
+						contestant_state_clone.set(edited_contestant);
+					}
+				})}
+				class="border rounded px-4 py-2 mr-2"
+			/>
+
+			<button
+				onclick=
+				{
+					create_contestant.clone()
+				}
+				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+				{
+					"Create Contestant"
+				}
+			</button>
+
+			<div class="mb-4">
+				<input placeholder="Name"
+					value={user_system.user_state.name.clone()}
+					oninput={Callback::from(
+					{
+						let user_state_clone = user_system.user_state.clone();
+						move |e: InputEvent|
+						{
+							let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+
+							let edited_user = UserState::new(
+								user_state_clone.id,
+								input.value(),
+								user_state_clone.email.clone(),
+								user_state_clone.account_type.clone()
+								);
+
+							user_state_clone.set(edited_user);
+						}
+					})}
+					class="border rounded px-4 py-2 mr-2"/>
+				<input placeholder="Email"
+					value={user_system.user_state.email.clone()}
+					oninput={Callback::from(
+					{
+						let user_state_clone = user_system.user_state.clone();
+						move |e: InputEvent|
+						{
+							let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+
+							let edited_user = UserState::new(
+								user_state_clone.id,
+								user_state_clone.name.clone(),
+								input.value(),
+								user_state_clone.account_type.clone()
+								);
+
+							user_state_clone.set(edited_user);
+						}
+					})}
+					class="border rounded px-4 py-2 mr-2"/>
+
+				<button
+					onclick=
+					{
+						if user_system.user_state.id.is_some()
+						{
+							user_system.update_user.clone()
+						}
+						else
+						{
+							user_system.create_user.clone()
+						}
+					}
+					class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+					{ 
+						if user_system.user_state.id.is_some()
+						{
+							"Update User"
+						}
+						else
+						{ 
+							"Create User"
+						}
+					}
+				</button>
+
+				if !message.is_empty()
+				{
+					<p class="text-green-500 mt-2">{ &**message }</p>
+				}
+			</div>
+
+			<button
+				onclick={user_system.get_users.reform(|_| ())}
+				class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
+				{ "Fetch User List" }
+			</button>
+
+			<h2 class="text-2xl font-bold text-[#FF8C00] mb-2">{ "User List" }</h2>
+
+			<ul class="list-disc pl-5">
+			{
+				for (*user_system.users).iter().map(|user|
+				{
+					let user_id = user.id;
+					html!
+					{
+						<li class="mb-2">
+						<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}, Email: {} AccountType: {} ", user.id, user.name, user.email, user.account_type) }</span>
+						<button
+							onclick={user_system.edit_user.clone().reform(move |_| user_id)}
+							class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
+							{ "Edit" }
+						</button>
+						<button
+							onclick={user_system.delete_user.clone().reform(move |_| user_id)}
+							class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+							{ "Delete" }
+						</button>
+					</li>
+				}
+			})}
+			</ul>
+		</>
 	}
 }
