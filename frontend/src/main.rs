@@ -25,13 +25,14 @@ fn app() -> Html
 
 	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None });
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
+	let delete_contestant : Callback<String> = delete_contestant(&contestant_state, &message);
 
 	let user_system = users::users::use_compile_user_system(message.clone());
 	let gameshow_system = gameshows::gameshows::use_compile_gameshow_system(message.clone());
 
 	build_website(&message, &user_system,
 		&gameshow_system,
-		&contestant_state, create_contestant)
+		&contestant_state, create_contestant, delete_contestant)
 }
 
 fn build_website(
@@ -39,7 +40,8 @@ fn build_website(
 	user_system : &UserSystem,
 	gameshow_system : &GameShowSystem,
 	contestant_state : &UseStateHandle<ContestantState>,
-	create_contestant : yew::Callback<MouseEvent>
+	create_contestant : yew::Callback<MouseEvent>,
+	delete_contestant : Callback<String>
 ) -> Html
 {
 
@@ -55,7 +57,8 @@ fn build_website(
 					message,
 					gameshow_system,
 					contestant_state,
-					create_contestant)
+					create_contestant,
+					delete_contestant)
 			}
 
 			{
@@ -73,7 +76,8 @@ fn build_showseason_mangement(
 	message: &UseStateHandle<String>,
 	gameshow_system : &GameShowSystem,
 	contestant_state : &UseStateHandle<ContestantState>,
-	create_contestant : yew::Callback<MouseEvent>
+	create_contestant : yew::Callback<MouseEvent>,
+	delete_contestant : Callback<String>
 ) -> Html
 {
 
@@ -207,6 +211,19 @@ fn build_showseason_mangement(
 				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 				{
 					"Create Contestant"
+				}
+			</button>
+
+			<button
+				onclick={delete_contestant.clone().reform(
+				{
+					let contestant_state_clone = contestant_state.clone();
+					move |_| contestant_state_clone.name.clone()
+				})}
+
+				class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+				{
+					"Delete Contestant"
 				}
 			</button>
 		</>

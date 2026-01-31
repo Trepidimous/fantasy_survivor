@@ -63,6 +63,11 @@ impl GameShowManager
 		return self.repo.create_contestant(contestant).await;
 	}
 
+	pub async fn delete_contestant(&self, name: String) -> Result<(), String>
+	{
+		return self.repo.delete_contestant(name).await;
+	}
+
 	pub async fn collect_all_contestants(&self) -> Result<Vec<Contestant>, String>
 	{
 		return self.repo.collect_all_contestants().await;

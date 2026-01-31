@@ -59,3 +59,33 @@ pub fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	};
 }
 
+pub fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
+	message: &UseStateHandle<String>) -> Callback<String>
+{
+	return
+	{
+		let message: UseStateHandle<String> = message.clone();
+		let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
+		Callback::from(move |_|
+		{
+			let message: UseStateHandle<String> = message.clone();
+			let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
+
+			spawn_local(async move
+			{
+				let url: String = format!(concat!(PLATFORM_URL!(), "/contestants/{}"), contestant_state.name);
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::delete(&url).send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set("Contestant deleted successfully".into());
+					}
+
+					_ => message.set("Failed to delete contestant".into()),
+				}
+			});
+		})
+	};
+}

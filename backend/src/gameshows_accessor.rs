@@ -108,6 +108,18 @@ impl GameShowRepository
 		return Ok(());
 	}
 
+	pub async fn delete_contestant(&self, name: String) -> Result<(), String>
+	{
+		self.connector.storage
+			.execute(
+				"DELETE FROM contestants WHERE name = $1",
+				&[&name]
+			).await
+			.map_err(|e: tokio_postgres::Error| e.to_string())?;
+
+		return Ok(());
+	}
+
 	pub async fn collect_all_contestants(&self) -> Result<Vec<Contestant>, String>
 	{
 		let users: Vec<Contestant> = self.connector.storage
