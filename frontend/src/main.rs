@@ -43,6 +43,40 @@ fn build_website(
 ) -> Html
 {
 
+	html!
+	{
+		<body class="bg-[#121212]  min-h-screen">
+			<div class="container mx-auto p-4">
+				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
+
+
+			{
+				build_showseason_mangement(
+					message,
+					gameshow_system,
+					contestant_state,
+					create_contestant)
+			}
+
+			{
+				build_user_management(
+					message,
+					user_system)
+			}
+
+			</div>
+		</body>
+	}
+}
+
+fn build_showseason_mangement(
+	message: &UseStateHandle<String>,
+	gameshow_system : &GameShowSystem,
+	contestant_state : &UseStateHandle<ContestantState>,
+	create_contestant : yew::Callback<MouseEvent>
+) -> Html
+{
+
 	let onchange: Callback<Event> =
 	{
 		Callback::from(move |e: Event|
@@ -61,9 +95,7 @@ fn build_website(
 
 	html!
 	{
-		<body class="bg-[#121212]  min-h-screen">
-			<div class="container mx-auto p-4">
-				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
+		<>
 					<button
 						onclick={gameshow_system.get_gameshows.reform(|_| ())}
 						class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
@@ -110,11 +142,13 @@ fn build_website(
 							{
 								<li class="mb-2">
 								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}", gameshow.id, gameshow.name) }</span>
-								<button
-									onclick={user_system.edit_user.clone().reform(move |_| gameshow_id)}
-									class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
-									{ "Select" }
-								</button>
+								
+								//<button
+								//	onclick={user_system.edit_user.clone().reform(move |_| gameshow_id)}
+								//	class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
+								//	{ "Select" }
+								//</button>
+
 								<button
 									onclick={gameshow_system.delete_gameshow.clone().reform(move |_| gameshow_id)}
 									class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
@@ -145,47 +179,25 @@ fn build_website(
 						</select>
 					</div>
 
-					{ build_user_management(
-						message,
-						user_system,
-						contestant_state,
-						create_contestant
-					) }
+					<input placeholder="Full Name of Contestant"
+						value={contestant_state.name.clone()}
+						oninput={Callback::from(
+						{
+							let contestant_state_clone = contestant_state.clone();
+							move |e: InputEvent|
+							{
+								let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
 
-			</div>
-		</body>
-	}
-}
+								let edited_contestant = ContestantState::new(
+									contestant_state_clone.id,
+									input.value()
+								);
 
-fn build_user_management(
-	message: &UseStateHandle<String>,
-	user_system : &UserSystem,
-	contestant_state : &UseStateHandle<ContestantState>,
-	create_contestant : yew::Callback<MouseEvent>
-) -> Html
-{
-	html!
-	{
-		<>
-			<input placeholder="Full Name of Contestant"
-				value={contestant_state.name.clone()}
-				oninput={Callback::from(
-				{
-					let contestant_state_clone = contestant_state.clone();
-					move |e: InputEvent|
-					{
-						let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
-
-						let edited_contestant = ContestantState::new(
-							contestant_state_clone.id,
-							input.value()
-						);
-
-						contestant_state_clone.set(edited_contestant);
-					}
-				})}
-				class="border rounded px-4 py-2 mr-2"
-			/>
+								contestant_state_clone.set(edited_contestant);
+							}
+						})}
+						class="border rounded px-4 py-2 mr-2"
+					/>
 
 			<button
 				onclick=
@@ -197,6 +209,18 @@ fn build_user_management(
 					"Create Contestant"
 				}
 			</button>
+		</>
+	}
+}
+
+fn build_user_management(
+	message: &UseStateHandle<String>,
+	user_system : &UserSystem
+) -> Html
+{
+	html!
+	{
+		<>
 
 			<div class="mb-4">
 				<input placeholder="Name"
