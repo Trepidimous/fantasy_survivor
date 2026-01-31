@@ -4,14 +4,12 @@ mod web_server;
 mod users;
 mod gameshows;
 mod contestants;
+mod logger;
 
 use crate::users::users::UserState;
 use crate::users::users::*;
 use crate::gameshows::gameshows::*;
 use crate::contestants::contestants::*;
-
-use wasm_bindgen::JsValue;
-use web_sys::{js_sys::Array};
 
 fn main()
 {
@@ -89,13 +87,8 @@ fn build_showseason_mangement(
 		{
 			let input: web_sys::HtmlSelectElement = e.target_unchecked_into();
 			let value = input.value();
-			// Handle selection logic here
-
 			let output : String = "Selected ShowSeason ID: ".to_string() + &value;
-			let js_value = JsValue::from_str(&output);
-			let arr = Array::new();
-			arr.push(&js_value);
-			web_sys::console::log(&arr);
+			logger::logger::log(output);
 		})
 	};
 
@@ -148,12 +141,6 @@ fn build_showseason_mangement(
 					{
 						<li class="mb-2">
 						<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {}", gameshow.id, gameshow.name) }</span>
-						
-						//<button
-						//	onclick={user_system.edit_user.clone().reform(move |_| gameshow_id)}
-						//	class="ml-4 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
-						//	{ "Select" }
-						//</button>
 
 						<button
 							onclick={gameshow_system.delete_gameshow.clone().reform(move |_| gameshow_id)}
