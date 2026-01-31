@@ -43,7 +43,8 @@ async fn rocket() -> _
 		.manage(gameshow_manager)
 		.mount("/", routes![	add_user, collect_users, update_user, delete_user,
 									collect_gameshows, add_gameshow, delete_gameshow,
-									create_contestant, collect_contestants, delete_contestant])
+									create_contestant, collect_contestants, delete_contestant,
+									enroll_contestant])
 		.attach(cors)
 }
 
@@ -124,4 +125,12 @@ async fn collect_contestants(
 async fn delete_contestant(manager : &State<GameShowManager>, name: String) -> Result<(), String>
 {
 	return manager.delete_contestant(name).await.map_err(|e: String| e);
+}
+
+#[post("/api/contestants/enroll" , data = "<contestant>")]
+async fn enroll_contestant(manager : &State<GameShowManager>, contestant: Json<Contestant>) -> Result<(), String>
+{
+	return manager.enter_contestant_onto_show(contestant.id.unwrap(), 
+															contestant.id_showseason.unwrap(),
+															contestant.nickname.clone().unwrap() ).await.map_err(|e: String| e);
 }

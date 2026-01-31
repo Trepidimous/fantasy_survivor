@@ -23,16 +23,17 @@ fn app() -> Html
 {
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
 
-	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None });
+	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None, id_showseason: None });
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
 	let delete_contestant : Callback<String> = delete_contestant(&contestant_state, &message);
+	let enroll_contestant_onto_show : Callback<yew::MouseEvent> = enroll_contestant_onto_show(&contestant_state, &message);
 
 	let user_system = users::users::use_compile_user_system(message.clone());
 	let gameshow_system = gameshows::gameshows::use_compile_gameshow_system(message.clone());
 
 	build_website(&message, &user_system,
 		&gameshow_system,
-		&contestant_state, create_contestant, delete_contestant)
+		&contestant_state, create_contestant, delete_contestant, enroll_contestant_onto_show)
 }
 
 fn build_website(
@@ -41,7 +42,8 @@ fn build_website(
 	gameshow_system : &GameShowSystem,
 	contestant_state : &UseStateHandle<ContestantState>,
 	create_contestant : yew::Callback<MouseEvent>,
-	delete_contestant : Callback<String>
+	delete_contestant : Callback<String>,
+	enroll_contestant_onto_show : Callback<yew::MouseEvent>
 ) -> Html
 {
 
@@ -50,15 +52,14 @@ fn build_website(
 		<body class="bg-[#121212]  min-h-screen">
 			<div class="container mx-auto p-4">
 				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
-
-
 			{
 				build_showseason_mangement(
 					message,
 					gameshow_system,
 					contestant_state,
 					create_contestant,
-					delete_contestant)
+					delete_contestant,
+					enroll_contestant_onto_show)
 			}
 
 			{
@@ -77,7 +78,8 @@ fn build_showseason_mangement(
 	gameshow_system : &GameShowSystem,
 	contestant_state : &UseStateHandle<ContestantState>,
 	create_contestant : yew::Callback<MouseEvent>,
-	delete_contestant : Callback<String>
+	delete_contestant : Callback<String>,
+	enroll_contestant_onto_show : Callback<yew::MouseEvent>
 ) -> Html
 {
 
@@ -194,7 +196,8 @@ fn build_showseason_mangement(
 
 						let edited_contestant = ContestantState::new(
 							contestant_state_clone.id,
-							input.value()
+							input.value(),
+							None
 						);
 
 						contestant_state_clone.set(edited_contestant);
@@ -224,6 +227,18 @@ fn build_showseason_mangement(
 				class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
 				{
 					"Delete Contestant"
+				}
+			</button>
+
+			<button
+				onclick=
+				{
+					enroll_contestant_onto_show.clone()
+				}
+
+				class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+				{
+					"Enroll Contestant onto Show"
 				}
 			</button>
 		</>

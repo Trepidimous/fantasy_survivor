@@ -22,6 +22,8 @@ pub struct Contestant
 {
 	pub id: Option<i32>,
 	pub name: String,
+	pub id_showseason: Option<i32>,
+	pub nickname: Option<String>
 }
 
 impl GameShowManager
@@ -73,9 +75,9 @@ impl GameShowManager
 		return self.repo.collect_all_contestants().await;
 	}
 
-	pub async fn enter_contestant_onto_show(&self, contestant_id: i32, game_show_id: i32) -> Result<(), String>
+	pub async fn enter_contestant_onto_show(&self, contestant_id: i32, game_show_id: i32, nickname: String) -> Result<(), String>
 	{
-		return self.repo.enter_contestant_onto_show(contestant_id, game_show_id).await;
+		return self.repo.enter_contestant_onto_show(contestant_id, game_show_id, nickname).await;
 	}
 
 }

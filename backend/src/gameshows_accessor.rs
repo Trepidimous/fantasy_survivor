@@ -126,18 +126,18 @@ impl GameShowRepository
 			.query("SELECT contestant_id, name FROM contestants", &[]).await
 			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
 			.iter()
-			.map(|row: &tokio_postgres::Row| Contestant { id: Some(row.get(0)), name: row.get(1) })
+			.map(|row: &tokio_postgres::Row| Contestant { id: Some(row.get(0)), name: row.get(1), id_showseason: None, nickname: None })
 			.collect::<Vec<Contestant>>();
 
 		return Ok(users);
 	}
 
-	pub async fn enter_contestant_onto_show(&self, contestant_id: i32, game_show_id: i32) -> Result<(), String>
+	pub async fn enter_contestant_onto_show(&self, contestant_id: i32, game_show_id: i32, nickname: String) -> Result<(), String>
 	{
 		self.connector.storage
 			.execute(
-				"INSERT INTO game_show_contestants (contestant_id, game_show_id) VALUES ($1, $2)",
-				&[&contestant_id, &game_show_id]
+				"INSERT INTO game_show_contestants (contestant_id, game_show_id, nickname) VALUES ($1, $2, $3)",
+				&[&contestant_id, &game_show_id, &nickname]
 			).await
 			.map_err(|e: tokio_postgres::Error| e.to_string())?;
 
