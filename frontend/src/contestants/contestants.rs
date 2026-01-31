@@ -55,7 +55,6 @@ pub fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 					_ => message.set("Failed to create contestant".into()),
 				}
 
-				contestant_state.set(ContestantState::new(None, "".to_string(), None));
 			});
 		})
 	};
