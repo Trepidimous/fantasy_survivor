@@ -4,6 +4,9 @@ use wasm_bindgen_futures::spawn_local;
 
 use crate::web_server::PLATFORM_URL;
 
+use crate::logger;
+
+#[derive(Clone, PartialEq)]
 pub struct ContestantState
 {
 	pub name: String,
@@ -21,6 +24,17 @@ impl ContestantState
 			id : id_in,
 			id_showseason : id_showseason_in
 		}
+	}
+}
+
+impl ContestantState
+{
+	pub fn to_string(&self) -> String
+	{
+		return format!("ContestantState {{ id: {:?}, name: {}, id_showseason: {:?} }}",
+			self.id,
+			self.name,
+			self.id_showseason);
 	}
 }
 
@@ -92,24 +106,26 @@ pub fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
 }
 
 pub fn enroll_contestant_onto_show(
-	contestant_state: &UseStateHandle<ContestantState>,
-	message: &UseStateHandle<String>) -> Callback<yew::MouseEvent>
+	message: &UseStateHandle<String>) -> Callback<ContestantState>
 {
+
+	// needs valid contestant id //
+
 	return
 	{
-		let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
 		let message: UseStateHandle<String> = message.clone();
-		Callback::from(move |_|
+		Callback::from(move |incoming_state: ContestantState|
 		{
-			let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
+
+			logger::logger::log("Enrolling >>>".to_string() + incoming_state.to_string().as_str());
 			let message: UseStateHandle<String> = message.clone();
 
 			spawn_local(async move
 			{
 				let contestant_data: serde_json::Value = serde_json::json!({
-					"name": contestant_state.name,
-					"id": contestant_state.id,
-					"id_showseason": contestant_state.id_showseason,
+					"name": incoming_state.name,
+					"id": incoming_state.id,
+					"id_showseason": incoming_state.id_showseason,
 					"nickname": "" 
 				});
 				let url:&str = concat!(PLATFORM_URL!(), "/contestants/enroll");
@@ -137,7 +153,7 @@ pub struct ContestantSystem
 	pub contestant_state : UseStateHandle<ContestantState>,
 	pub create_contestant: yew::Callback<yew::MouseEvent>,
 	pub delete_contestant: Callback<String>,
-	pub enroll_contestant_onto_show: Callback<yew::MouseEvent>,
+	pub enroll_contestant_onto_show: Callback<ContestantState>,
 }
 
 #[hook]
@@ -147,7 +163,7 @@ pub fn use_compile_contestant_system(message: UseStateHandle<String>) -> Contest
 
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
 	let delete_contestant : Callback<String> = delete_contestant(&contestant_state, &message);
-	let enroll_contestant_onto_show : Callback<yew::MouseEvent> = enroll_contestant_onto_show(&contestant_state, &message);
+	let enroll_contestant_onto_show : Callback<ContestantState> = enroll_contestant_onto_show(&message);
 
 	return ContestantSystem { contestant_state, create_contestant, delete_contestant, enroll_contestant_onto_show };
 }

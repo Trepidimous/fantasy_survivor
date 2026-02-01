@@ -68,16 +68,25 @@ fn build_showseason_mangement(
 ) -> Html
 {
 
-	let onchange: Callback<Event> =
-	{
-		Callback::from(move |e: Event|
-		{
+	let gameshow_state_clone: UseStateHandle<GameShowState> = gameshow_system.gameshow_state.clone();
+
+	let onchange: Callback<Event> = {
+		Callback::from(move |e: Event| {
 			let input: web_sys::HtmlSelectElement = e.target_unchecked_into();
-			let value = input.value();
-			let output : String = "Selected ShowSeason ID: ".to_string() + &value;
+			let value_string = input.value();
+			
+			let value: i32 = value_string.parse().unwrap_or(-1);
+
+			let mut gameshow_state_update = (*gameshow_state_clone).clone();
+			gameshow_state_update.id = Some(value);
+			gameshow_state_clone.set(gameshow_state_update);
+			
+			let output = format!("Selected ShowSeason ID: {}", value);
 			logger::logger::log(output);
 		})
 	};
+
+
 
 	html!
 	{
@@ -205,9 +214,23 @@ fn build_showseason_mangement(
 			</button>
 
 			<button
-				onclick=
+				onclick = 
 				{
 					contestant_system.enroll_contestant_onto_show.clone()
+					.reform(
+					{
+						logger::logger::log("Enrol Req con.id>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
+
+						let contestant_state_to_send = ContestantState::new(
+							contestant_system.contestant_state.id,
+							contestant_system.contestant_state.name.clone(),
+							gameshow_system.gameshow_state.id,
+						);
+
+						logger::logger::log("Enrol Req 222 (con.id)>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
+
+						move |_| contestant_state_to_send.clone()
+					})				
 				}
 
 				class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">

@@ -12,6 +12,7 @@ pub struct GameShow
 	pub name: String,
 }
 
+#[derive(Clone, PartialEq)]
 pub struct GameShowState
 {
 	pub name: String,
