@@ -44,7 +44,7 @@ async fn rocket() -> _
 		.mount("/", routes![	add_user, collect_users, update_user, delete_user,
 									collect_gameshows, add_gameshow, delete_gameshow,
 									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant,
-									enroll_contestant])
+									enroll_contestant, gameshow_preflight])
 		.attach(cors)
 }
 
@@ -145,4 +145,12 @@ async fn enroll_contestant(manager : &State<GameShowManager>, contestant: Json<C
 	return manager.enter_contestant_onto_show(contestant.id.unwrap(), 
 															contestant.id_showseason.unwrap(),
 															contestant.nickname.clone().unwrap() ).await.map_err(|e: String| e);
+}
+
+// Browsers automatically send out an options request before sending POST requests with Json payloads.
+// This just lets browsers know that it is ok.
+#[options("/api/gameshows")]
+fn gameshow_preflight() -> Status
+{
+    Status::NoContent
 }
