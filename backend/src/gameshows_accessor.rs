@@ -139,7 +139,7 @@ impl GameShowRepository
 		}
 	}
 
-	pub async fn delete_contestant(&self, name: String) -> Result<(), String>
+	pub async fn delete_contestant(&self, name: &str) -> Result<(), String>
 	{
 		self.connector.storage
 			.execute(

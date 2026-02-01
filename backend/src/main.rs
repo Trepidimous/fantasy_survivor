@@ -135,7 +135,7 @@ async fn collect_contestants(
 }
 
 #[delete("/api/contestants/<name>")]
-async fn delete_contestant(manager : &State<GameShowManager>, name: String) -> Result<(), String>
+async fn delete_contestant(manager : &State<GameShowManager>, name: &str) -> Result<(), String>
 {
 	return manager.delete_contestant(name).await.map_err(|e: String| e);
 }
