@@ -45,7 +45,6 @@ fn build_website(
 				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
 			{
 				build_showseason_mangement(
-					message,
 					gameshow_system,
 					contestant_system)
 			}
@@ -62,7 +61,6 @@ fn build_website(
 }
 
 fn build_showseason_mangement(
-	message: &UseStateHandle<String>,
 	gameshow_system : &GameShowSystem,
 	contestant_system : &ContestantSystem
 ) -> Html
