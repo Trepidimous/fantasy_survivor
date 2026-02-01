@@ -44,7 +44,8 @@ async fn rocket() -> _
 		.mount("/", routes![	add_user, collect_users, update_user, delete_user,
 									collect_gameshows, add_gameshow, delete_gameshow,
 									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant,
-									enroll_contestant, gameshow_preflight])
+									enroll_contestant,
+									gameshow_preflight, gameshow_preflight_for_delete])
 		.attach(cors)
 }
 
@@ -147,10 +148,29 @@ async fn enroll_contestant(manager : &State<GameShowManager>, contestant: Json<C
 															contestant.nickname.clone().unwrap() ).await.map_err(|e: String| e);
 }
 
+///// These are just fake endpoints added in to stop server warnings //////
+
 // Browsers automatically send out an options request before sending POST requests with Json payloads.
 // This just lets browsers know that it is ok.
 #[options("/api/gameshows")]
 fn gameshow_preflight() -> Status
 {
-    Status::NoContent
+	Status::NoContent
 }
+
+#[options("/api/gameshows/<id>")]
+fn gameshow_preflight_for_delete(id : i32) -> Status
+{
+	Status::NoContent
+}
+
+// I tried this adding this to stop a warning, but it didn't help.
+// #[options("/api/contestants", data = "<contestant>")]
+// fn create_contestant_preflight(
+// 	manager : &State<GameShowManager>,
+// 	contestant: Json<Contestant>
+// 	) -> Result<(), String>
+// {
+// 	return Ok(());
+// 	//return manager.create_contestant(&contestant).await.map_err(|e: String| e);
+// }
