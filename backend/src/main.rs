@@ -45,7 +45,7 @@ async fn rocket() -> _
 									collect_gameshows, add_gameshow, delete_gameshow,
 									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant,
 									enroll_contestant,
-									gameshow_preflight, gameshow_preflight_for_delete])
+									gameshow_preflight, gameshow_preflight_for_delete, create_contestant_preflight, delete_contestant_preflight])
 		.attach(cors)
 }
 
@@ -165,12 +165,15 @@ fn gameshow_preflight_for_delete(id : i32) -> Status
 }
 
 // I tried this adding this to stop a warning, but it didn't help.
-// #[options("/api/contestants", data = "<contestant>")]
-// fn create_contestant_preflight(
-// 	manager : &State<GameShowManager>,
-// 	contestant: Json<Contestant>
-// 	) -> Result<(), String>
-// {
-// 	return Ok(());
-// 	//return manager.create_contestant(&contestant).await.map_err(|e: String| e);
-// }
+#[options("/api/contestants")]
+fn create_contestant_preflight(
+	) -> Result<(), String>
+{
+	return Ok(());
+}
+
+#[options("/api/contestants/<name>")]
+async fn delete_contestant_preflight(name: String) -> Result<(), String>
+{
+	return Ok(());
+}
