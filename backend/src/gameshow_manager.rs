@@ -65,6 +65,11 @@ impl GameShowManager
 		return self.repo.create_contestant(contestant).await;
 	}
 
+	pub async fn select_contestant_by_name(&self, name: String) -> Result<Contestant, String>
+	{
+		return self.repo.select_contestant_by_name(name).await;
+	}
+
 	pub async fn delete_contestant(&self, name: String) -> Result<(), String>
 	{
 		return self.repo.delete_contestant(name).await;

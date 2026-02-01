@@ -108,6 +108,37 @@ impl GameShowRepository
 		return Ok(());
 	}
 
+	pub async fn select_contestant_by_name(&self, name: String) -> Result<Contestant, String>
+	{
+		let row_option: Option<tokio_postgres::Row> = self.connector.storage
+			.query_opt(
+				"SELECT contestant_id, name FROM contestants WHERE name = $1",
+				&[&name]
+			).await
+			.map_err(|e: tokio_postgres::Error| e.to_string())?;
+
+		match row_option
+		{
+			Some(row) =>
+			{
+				let contestant: Contestant = Contestant
+				{
+					id: Some(row.get(0)),
+					name: row.get(1),
+					id_showseason: None,
+					nickname: None
+				};
+
+				return Ok(contestant);
+			}
+
+			None =>
+			{
+				return Err("Contestant not found".to_string());
+			}
+		}
+	}
+
 	pub async fn delete_contestant(&self, name: String) -> Result<(), String>
 	{
 		self.connector.storage

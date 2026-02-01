@@ -74,6 +74,50 @@ pub fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	};
 }
 
+pub fn select_contestant_by_name(
+	contestant_state: &UseStateHandle<ContestantState>,
+	message: &UseStateHandle<String>) -> yew::Callback<yew::MouseEvent>
+{
+	return
+	{
+		let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
+		let message: UseStateHandle<String> = message.clone();
+		Callback::from(move |_|
+		{
+			let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
+			let message: UseStateHandle<String> = message.clone();
+
+			spawn_local(async move
+			{
+
+				logger::logger::log("Select Contestant By Name >>>".to_string() + contestant_state.name.to_string().as_str());
+
+				let url: String = format!(concat!(PLATFORM_URL!(), "/contestants/select?name={}"), contestant_state.name);
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::get(&url)
+					.send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						if let Ok(json) = resp.json::<serde_json::Value>().await
+						{
+							let id = json.get("id").and_then(|v| v.as_i64()).map(|v| v as i32);
+							let name = json.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
+							let id_showseason = json.get("id_showseason").and_then(|v| v.as_i64()).map(|v| v as i32);
+
+							contestant_state.set(ContestantState::new(id, name.clone(), id_showseason));
+							message.set(format!("Contestant[{}] selected successfully. They have ID[{}]", name, id.unwrap_or(-1)));
+						}
+					}
+
+					_ => message.set("Failed to select contestant".into()),
+				}
+			});
+		})
+	};
+}
+
 pub fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	message: &UseStateHandle<String>) -> Callback<String>
 {
@@ -152,8 +196,9 @@ pub struct ContestantSystem
 {
 	pub contestant_state : UseStateHandle<ContestantState>,
 	pub create_contestant: yew::Callback<yew::MouseEvent>,
+	pub select_contestant: yew::Callback<yew::MouseEvent>,
 	pub delete_contestant: Callback<String>,
-	pub enroll_contestant_onto_show: Callback<ContestantState>,
+	pub enroll_contestant_onto_show: Callback<ContestantState>
 }
 
 #[hook]
@@ -162,8 +207,9 @@ pub fn use_compile_contestant_system(message: UseStateHandle<String>) -> Contest
 	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None, id_showseason: None });
 
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
+	let select_contestant : yew::Callback<yew::MouseEvent> = select_contestant_by_name(&contestant_state, &message);
 	let delete_contestant : Callback<String> = delete_contestant(&contestant_state, &message);
 	let enroll_contestant_onto_show : Callback<ContestantState> = enroll_contestant_onto_show(&message);
 
-	return ContestantSystem { contestant_state, create_contestant, delete_contestant, enroll_contestant_onto_show };
+	return ContestantSystem { contestant_state, create_contestant, select_contestant, delete_contestant, enroll_contestant_onto_show };
 }

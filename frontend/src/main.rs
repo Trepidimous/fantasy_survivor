@@ -199,15 +199,13 @@ fn build_showseason_mangement(
 			</button>
 
 			<button
-				onclick={contestant_system.delete_contestant.clone().reform(
+				onclick=
 				{
-					let contestant_state_clone = contestant_system.contestant_state.clone();
-					move |_| contestant_state_clone.name.clone()
-				})}
-
-				class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+					contestant_system.select_contestant.clone()
+				}
+				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 				{
-					"Delete Contestant"
+					"Select Contestant"
 				}
 			</button>
 
@@ -236,6 +234,20 @@ fn build_showseason_mangement(
 					"Enroll Contestant onto Show"
 				}
 			</button>
+
+			<button
+				onclick={contestant_system.delete_contestant.clone().reform(
+				{
+					let contestant_state_clone = contestant_system.contestant_state.clone();
+					move |_| contestant_state_clone.name.clone()
+				})}
+
+				class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+				{
+					"Delete Contestant"
+				}
+			</button>
+
 		</>
 	}
 }
