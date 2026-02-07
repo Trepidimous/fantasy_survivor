@@ -111,7 +111,15 @@ async fn create_contestant(
 	contestant: Json<Contestant>
 	) -> Result<Json<Contestant>, Custom<String>>
 {
-	let creation_result = manager.create_contestant(&contestant).await.map_err(|e: String| e);
+	let creation_result =manager.create_contestant(&contestant).await.map_err(|e: String| e);
+	match creation_result
+	{
+		Ok(_created_contestant) =>
+		{
+			println!("Created contestant with name [{}]", contestant.name);
+		}
+		_=> println!("Failed to create contestant. Error: {}", creation_result.err().unwrap_or("Unknown error".to_string())),
+	}
 	let selection_result = manager.select_contestant_by_name(contestant.name.clone());
 	let selection_result_json = selection_result.await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 

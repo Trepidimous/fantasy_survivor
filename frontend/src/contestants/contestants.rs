@@ -160,9 +160,6 @@ pub fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
 pub fn enroll_contestant_onto_show(
 	message: &UseStateHandle<String>) -> Callback<ContestantState>
 {
-
-	// needs valid contestant id //
-
 	return
 	{
 		let message: UseStateHandle<String> = message.clone();
