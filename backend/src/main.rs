@@ -109,9 +109,13 @@ async fn delete_gameshow(manager : &State<GameShowManager>, id: i32) -> Result<J
 async fn create_contestant(
 	manager : &State<GameShowManager>,
 	contestant: Json<Contestant>
-	) -> Result<(), String>
+	) -> Result<Json<Contestant>, Custom<String>>
 {
-	return manager.create_contestant(&contestant).await.map_err(|e: String| e);
+	let creation_result = manager.create_contestant(&contestant).await.map_err(|e: String| e);
+	let selection_result = manager.select_contestant_by_name(contestant.name.clone());
+	let selection_result_json = selection_result.await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+
+	return selection_result_json;
 }
 
 #[get("/api/contestants/select?<name>")]

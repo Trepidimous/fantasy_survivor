@@ -63,7 +63,15 @@ pub fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 				{
 					Ok(resp) if resp.ok() =>
 					{
-						message.set("Contestant created successfully".into());
+						if let Ok(json) = resp.json::<serde_json::Value>().await
+						{
+							let id = json.get("id").and_then(|v| v.as_i64()).map(|v| v as i32);
+							let name = json.get("name").and_then(|v| v.as_str()).unwrap_or("").to_string();
+							let id_showseason = json.get("id_showseason").and_then(|v| v.as_i64()).map(|v| v as i32);
+
+							contestant_state.set(ContestantState::new(id, name.clone(), id_showseason));
+							message.set(format!("Contestant[{}] created successfully. With have ID[{}]", name, id.unwrap_or(-1)));
+						}
 					}
 
 					_ => message.set("Failed to create contestant".into()),
@@ -139,7 +147,7 @@ pub fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
 				{
 					Ok(resp) if resp.ok() =>
 					{
-						message.set("Contestant deleted successfully".into());
+						message.set(format!("Contestant[{}] deleted successfully", contestant_state.name));
 					}
 
 					_ => message.set("Failed to delete contestant".into()),
