@@ -2,8 +2,9 @@
 extern crate rocket;
 
 mod user_manager;
-mod memberships_accessor;
 mod gameshows_accessor;
+mod memberships_accessor;
+mod league_accessor;
 mod utilities;
 
 mod gameshow_manager;
@@ -13,7 +14,7 @@ use rocket::{ State, response::status::Custom, http::Status };
 use rocket_cors::{ CorsOptions, AllowedOrigins };
 
 use crate::utilities::storage::StorageConnector;
-use crate::gameshow_manager::{Contestant, GameShow, GameShowManager};
+use crate::gameshow_manager::{Contestant, GameShow, GameShowManager, League};
 use crate::user_manager::User;
 use crate::user_manager::UserManager;
 
@@ -29,9 +30,13 @@ async fn rocket() -> _
 	let shared_memberships_repo : Arc<memberships_accessor::UserRepository> = Arc::new(memberships_repository);
 	let gameshows_respository : gameshows_accessor::GameShowRepository = gameshows_accessor::GameShowRepository::new(Arc::clone(&shared_storage)).await;
 	let shared_gameshows_repo : Arc<gameshows_accessor::GameShowRepository> = Arc::new(gameshows_respository);
+	let league_repository : league_accessor::LeagueRepository = league_accessor::LeagueRepository::new(Arc::clone(&shared_storage)).await;
+	let shared_leagues_repo : Arc<league_accessor::LeagueRepository> = Arc::new(league_repository);
 
 	let user_manager: UserManager = UserManager::create(Arc::clone(&shared_memberships_repo)).await;
-	let gameshow_manager : GameShowManager = GameShowManager::create(Arc::clone(&shared_gameshows_repo)).await;
+	let gameshow_manager : GameShowManager = GameShowManager::create(	Arc::clone(&shared_gameshows_repo),
+																							Arc::clone(&shared_leagues_repo)
+																						).await;
 
 	let cors: rocket_cors::Cors = CorsOptions::default()
 		.allowed_origins(AllowedOrigins::all())
@@ -158,6 +163,31 @@ async fn enroll_contestant(manager : &State<GameShowManager>, contestant: Json<C
 	return manager.enter_contestant_onto_show(contestant.id.unwrap(), 
 															contestant.id_showseason.unwrap(),
 															contestant.nickname.clone().unwrap() ).await.map_err(|e: String| e);
+}
+
+#[get("/api/leagues")]
+async fn collect_leagues(
+	manager : &State<GameShowManager>
+	) -> Result<Json<Vec<League>>, Custom<String>>
+{
+	return manager.collect_leagues().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+}
+
+#[post("/api/leagues", data = "<league>")]
+async fn create_league(
+	manager : &State<GameShowManager>,
+	league : Json<League>
+	) -> Result<(), String>
+{
+	let creation_result = manager.create_league(&league).await.map_err(|e: String| e);
+	return creation_result;
+}
+
+#[delete("/api/leagues/<id>")]
+async fn delete_league(manager : &State<GameShowManager>, id: i32) -> Result<Json<Vec<League>>, Custom<String>>
+{
+	let deletion_result = manager.delete_league(id).await.map_err(|e: String| e);
+	return manager.collect_leagues().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
 ///// These are just fake endpoints added in to stop server warnings //////

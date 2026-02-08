@@ -1,0 +1,73 @@
+use crate::gameshow_manager::League;
+use crate::utilities::storage::StorageConnector;
+
+use std::sync::Arc;
+
+pub struct LeagueRepository
+{
+	connector: Arc<StorageConnector>,
+}
+
+impl LeagueRepository
+{
+	pub async fn new(storage_connection: Arc<StorageConnector>) -> Self
+	{
+
+		let league_repository: LeagueRepository = LeagueRepository
+		{
+			connector: Arc::clone(&storage_connection),
+		};
+
+		league_repository.initialize_storage().await;
+
+		return league_repository;
+	}
+
+	async fn initialize_storage(&self) -> ()
+	{
+		self.connector.storage
+			.execute(
+				"CREATE TABLE IF NOT EXISTS leagues (
+					id SERIAL PRIMARY KEY,
+					name TEXT NOT NULL,
+					id_showseason INTEGER
+				)",
+				&[]
+			).await
+			.expect("Failed to create table");
+	}
+
+	pub async fn collect_leagues(&self) -> Result<Vec<League>, String>
+	{
+		let users: Vec<League> = self.connector.storage
+			.query("SELECT id, name, id_showseason FROM leagues", &[]).await
+			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
+			.iter()
+			.map(|row: &tokio_postgres::Row| League { id: Some(row.get(0)), name: row.get(1), id_showseason: row.get(2) })
+			.collect::<Vec<League>>();
+
+		return Ok(users);
+	}
+
+	pub async fn create_league(&self, league: &League) -> Result<(), String>
+	{
+		self.connector.storage
+			.execute(
+				"INSERT INTO leagues (name, id_showseason) VALUES ($1, $2)",
+				&[&league.name, &league.id_showseason]
+			).await
+			.map_err(|e: tokio_postgres::Error| e.to_string())?;
+
+		return Ok(());
+	}
+
+	pub async fn delete_league(&self, id: i32) -> Result<(), String>
+	{
+		self.connector.storage
+			.execute("DELETE FROM leagues WHERE id = $1", &[&id]).await
+			.map_err(|e|  e.to_string())?;
+
+		return Ok(());
+	}
+
+}

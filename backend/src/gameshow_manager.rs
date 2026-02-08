@@ -1,13 +1,13 @@
-
 use rocket::serde::{ Deserialize, Serialize };
 
-use crate::gameshows_accessor;
+use crate::{gameshows_accessor, league_accessor};
 
 use std::sync::Arc;
 
 pub struct GameShowManager
 {
 	pub repo: Arc<gameshows_accessor::GameShowRepository>,
+	pub league_repository: Arc<league_accessor::LeagueRepository>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -26,13 +26,23 @@ pub struct Contestant
 	pub nickname: Option<String>
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct League
+{
+	pub id: Option<i32>,
+	pub name: String,
+	pub id_showseason: Option<i32>
+}
+
 impl GameShowManager
 {
-	pub async fn create(repository : Arc<gameshows_accessor::GameShowRepository>) -> Self
+	pub async fn create(		repository : Arc<gameshows_accessor::GameShowRepository>, 
+								league_repository_in : Arc<league_accessor::LeagueRepository>) -> Self
 	{	
 		let game_repository: GameShowManager = GameShowManager
 		{
-			repo : repository
+			repo : repository,
+			league_repository : league_repository_in
 		};
 
 		return game_repository;
@@ -83,6 +93,21 @@ impl GameShowManager
 	pub async fn enter_contestant_onto_show(&self, contestant_id: i32, game_show_id: i32, nickname: String) -> Result<(), String>
 	{
 		return self.repo.enter_contestant_onto_show(contestant_id, game_show_id, nickname).await;
+	}
+
+	pub async fn create_league(&self, league: &League) -> Result<(), String>
+	{
+		return self.league_repository.create_league(league).await;
+	}
+
+	pub async fn collect_leagues(&self) -> Result<Vec<League>, String>
+	{
+		return self.league_repository.collect_leagues().await;
+	}
+
+	pub async fn delete_league(&self, id: i32) -> Result<(), String>
+	{
+		return self.league_repository.delete_league(id).await;
 	}
 
 }
