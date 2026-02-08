@@ -60,6 +60,20 @@ fn build_website(
 	}
 }
 
+fn build_league_management(gameshow_system : &GameShowSystem) -> Html
+{
+	html!
+	{
+		/*
+		<button
+			onclick={gameshow_system.collect_leagues.reform(|_| ())}
+			class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
+			{ "Fetch Leagues" }
+		</button>
+		*/
+	}
+}
+
 fn build_showseason_mangement(
 	gameshow_system : &GameShowSystem,
 	contestant_system : &ContestantSystem

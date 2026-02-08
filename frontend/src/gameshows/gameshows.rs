@@ -140,6 +140,34 @@ pub fn delete_gameshow(message: &UseStateHandle<String>,
 	};
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct League
+{
+	pub id: i32,
+	pub name: String,
+}
+
+#[derive(Clone, PartialEq)]
+pub struct LeagueState
+{
+	pub id: Option<i32>,
+	pub name: String,
+	pub id_showseason: Option<i32>
+}
+
+impl LeagueState
+{
+	pub fn from_default() -> Self
+	{
+		LeagueState
+		{
+			id : None,
+			name : "".to_string(),
+			id_showseason : None
+		}
+	}
+}
+
 pub struct GameShowSystem
 {
 	pub gameshow_state: UseStateHandle<GameShowState>,
@@ -147,6 +175,11 @@ pub struct GameShowSystem
 	pub get_gameshows: Callback<()>,
 	pub create_gameshow: yew::Callback<yew::MouseEvent>,
 	pub delete_gameshow: Callback<i32>,
+	pub league_state : UseStateHandle<LeagueState>,
+	pub leagues : UseStateHandle<Vec<League>>,
+	//pub collect_leagues: Callback<()>,
+	//pub create_league: yew::Callback<yew::MouseEvent>,
+	//pub delete_league: Callback<i32>,
 }
 
 #[hook]
@@ -159,5 +192,8 @@ pub fn use_compile_gameshow_system(message: UseStateHandle<String>) -> GameShowS
 	let create_gameshow: yew::Callback<yew::MouseEvent> = create_gameshow(&gameshow_state, &message, get_gameshows.clone());
 	let delete_gameshow: Callback<i32> = delete_gameshow(&message, get_gameshows.clone());
 
-	return GameShowSystem { gameshow_state, gameshows, get_gameshows, create_gameshow, delete_gameshow };
+	let league_state : UseStateHandle<LeagueState> = use_state(|| LeagueState::from_default());
+	let leagues : UseStateHandle<Vec<League>> = use_state(Vec::new);
+
+	return GameShowSystem { gameshow_state, gameshows, get_gameshows, create_gameshow, delete_gameshow, league_state, leagues };
 }
