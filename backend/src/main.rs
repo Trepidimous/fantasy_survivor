@@ -165,12 +165,12 @@ async fn enroll_contestant(manager : &State<GameShowManager>, contestant: Json<C
 															contestant.nickname.clone().unwrap() ).await.map_err(|e: String| e);
 }
 
-#[get("/api/leagues")]
+#[get("/api/leagues/<id_showseason>")]
 async fn collect_leagues(
-	manager : &State<GameShowManager>
-	) -> Result<Json<Vec<League>>, Custom<String>>
+	manager : &State<GameShowManager>,
+	id_showseason : i32) -> Result<Json<Vec<League>>, Custom<String>>
 {
-	return manager.collect_leagues().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+	return manager.collect_leagues(id_showseason).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
 #[post("/api/leagues", data = "<league>")]
@@ -183,11 +183,11 @@ async fn create_league(
 	return creation_result;
 }
 
-#[delete("/api/leagues/<id>")]
-async fn delete_league(manager : &State<GameShowManager>, id: i32) -> Result<Json<Vec<League>>, Custom<String>>
+#[delete("/api/leagues/<league_id>/show/<id_seasonshow>")]
+async fn delete_league(manager : &State<GameShowManager>, league_id: i32, id_seasonshow : i32) -> Result<Json<Vec<League>>, Custom<String>>
 {
-	let deletion_result = manager.delete_league(id).await.map_err(|e: String| e);
-	return manager.collect_leagues().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+	let deletion_result = manager.delete_league(league_id).await.map_err(|e: String| e);
+	return manager.collect_leagues(id_seasonshow).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
 ///// These are just fake endpoints added in to stop server warnings //////

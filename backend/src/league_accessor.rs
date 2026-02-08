@@ -37,10 +37,10 @@ impl LeagueRepository
 			.expect("Failed to create table");
 	}
 
-	pub async fn collect_leagues(&self) -> Result<Vec<League>, String>
+	pub async fn collect_leagues(&self, id_show_season : i32) -> Result<Vec<League>, String>
 	{
 		let users: Vec<League> = self.connector.storage
-			.query("SELECT id, name, id_showseason FROM leagues", &[]).await
+			.query("SELECT id, name, id_showseason FROM leagues WHERE id_showseason = $1", &[&id_show_season]).await
 			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
 			.iter()
 			.map(|row: &tokio_postgres::Row| League { id: Some(row.get(0)), name: row.get(1), id_showseason: row.get(2) })

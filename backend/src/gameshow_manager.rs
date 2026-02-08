@@ -100,9 +100,9 @@ impl GameShowManager
 		return self.league_repository.create_league(league).await;
 	}
 
-	pub async fn collect_leagues(&self) -> Result<Vec<League>, String>
+	pub async fn collect_leagues(&self, id_showseason : i32) -> Result<Vec<League>, String>
 	{
-		return self.league_repository.collect_leagues().await;
+		return self.league_repository.collect_leagues(id_showseason).await;
 	}
 
 	pub async fn delete_league(&self, id: i32) -> Result<(), String>
