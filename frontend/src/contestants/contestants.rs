@@ -187,7 +187,7 @@ pub fn enroll_contestant_onto_show(
 				{
 					Ok(resp) if resp.ok() =>
 					{
-						message.set("Contestant enrolled onto show successfully".into());
+						message.set(format!("Contestant enrolled successfully. [{}]", incoming_state.to_string()).into());
 					}
 
 					_ => message.set("Failed to enroll contestant onto show".into()),

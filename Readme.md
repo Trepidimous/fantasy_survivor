@@ -60,3 +60,8 @@ https://github.com/FrancescoXX/rust-fullstack-app
 If the database needs to be re-created or gets corrupted
   docker compose down -v
   docker compose up
+
+  # Test queries in postman
+  // list contestants
+  GET
+  http://127.0.0.1:8000/api/contestants
