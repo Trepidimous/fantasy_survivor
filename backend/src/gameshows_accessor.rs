@@ -91,7 +91,11 @@ impl GameShowRepository
 	{
 		self.connector.storage
 			.execute("DELETE FROM game_shows WHERE game_show_id = $1", &[&id]).await
-			.map_err(|e|  e.to_string())?;
+			.map_err(|e| {
+			print!("delete_game_show error[{}]", e.to_string());
+			e.to_string()
+	})?;
+		
 
 		return Ok(());
 	}

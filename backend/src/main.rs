@@ -108,6 +108,7 @@ async fn add_gameshow(
 #[delete("/api/gameshows/<id>")]
 async fn delete_gameshow(manager : &State<GameShowManager>, id: i32) -> Result<Json<Vec<GameShow>>, Custom<String>>
 {
+	println!("attempting to delete seasonshow ID[{}]", id);
 	return manager.delete_gameshow_and_refresh(id).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
