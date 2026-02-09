@@ -62,6 +62,27 @@ fn build_website(
 
 fn build_league_management(gameshow_system : &GameShowSystem) -> Html
 {
+
+	let gameshow_state_clone: UseStateHandle<GameShowState> = gameshow_system.gameshow_state.clone();
+
+	let on_select_league: Callback<Event> = 
+	{
+		Callback::from(move |e: Event|
+		{
+			let input: web_sys::HtmlSelectElement = e.target_unchecked_into();
+			let value_string = input.value();
+			
+			let value: i32 = value_string.parse().unwrap_or(-1);
+
+			let mut gameshow_state_update = (*gameshow_state_clone).clone();
+			gameshow_state_update.id = Some(value);
+			gameshow_state_clone.set(gameshow_state_update);
+			
+			let output = format!("Selected League ID [{}]", value);
+			logger::logger::log(output);
+		})
+	};
+
 	let showseason_id = gameshow_system.gameshow_state.id.unwrap_or(-1);
 	html!
 	{
@@ -71,6 +92,26 @@ fn build_league_management(gameshow_system : &GameShowSystem) -> Html
 				class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
 				{ "Fetch Leagues" }
 			</button>
+
+			<div class="mb-4">
+				<select onchange={on_select_league}>
+					<option value="" disabled=true selected=true>{"Select a league"}</option>
+					{
+						gameshow_system.leagues.iter().map(|league|
+						{
+							html!
+							{
+								<option key={league.id} value={league.id.to_string()}>
+								{
+									&league.name
+								}
+								</option>
+							}
+						}).collect::<Html>()
+					}
+				</select>
+			</div>
+
 		</>
 	}
 }
@@ -83,8 +124,10 @@ fn build_showseason_mangement(
 
 	let gameshow_state_clone: UseStateHandle<GameShowState> = gameshow_system.gameshow_state.clone();
 
-	let onchange: Callback<Event> = {
-		Callback::from(move |e: Event| {
+	let on_select_showseason: Callback<Event> = 
+	{
+		Callback::from(move |e: Event| 
+		{
 			let input: web_sys::HtmlSelectElement = e.target_unchecked_into();
 			let value_string = input.value();
 			
@@ -162,7 +205,7 @@ fn build_showseason_mangement(
 			</ul>
 
 			<div class="mb-4">
-				<select {onchange}>
+				<select onchange={on_select_showseason}>
 					<option value="" disabled=true selected=true>{"Select a show season"}</option>
 					{
 						// 2. Iterate over the vector and map to options
