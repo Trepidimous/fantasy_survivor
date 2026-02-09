@@ -62,7 +62,7 @@ fn build_website(
 
 fn build_league_management(gameshow_system : &GameShowSystem) -> Html
 {
-	let showseason_id = gameshow_system.league_state.id_showseason.unwrap_or(-1);
+	let showseason_id = gameshow_system.gameshow_state.id.unwrap_or(-1);
 	html!
 	{
 		<>
@@ -230,7 +230,7 @@ fn build_showseason_mangement(
 					contestant_system.enroll_contestant_onto_show.clone()
 					.reform(
 					{
-						logger::logger::log("Enrol Req con.id>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
+						//logger::logger::log("Enrol Req con.id>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
 
 						let contestant_state_to_send = ContestantState::new(
 							contestant_system.contestant_state.id,
@@ -238,7 +238,7 @@ fn build_showseason_mangement(
 							gameshow_system.gameshow_state.id,
 						);
 
-						logger::logger::log("Enrol Req 222 (con.id)>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
+						//logger::logger::log("Enrol Req 222 (con.id)>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
 
 						move |_| contestant_state_to_send.clone()
 					})				
