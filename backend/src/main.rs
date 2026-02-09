@@ -50,7 +50,8 @@ async fn rocket() -> _
 									collect_gameshows, add_gameshow, delete_gameshow,
 									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant,
 									enroll_contestant,
-									gameshow_preflight, gameshow_preflight_for_delete, create_contestant_preflight, delete_contestant_preflight])
+									gameshow_preflight, gameshow_preflight_for_delete, create_contestant_preflight, delete_contestant_preflight,
+									collect_leagues, create_league, delete_league])
 		.attach(cors)
 }
 

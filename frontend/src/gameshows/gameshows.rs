@@ -188,29 +188,30 @@ pub struct GameShowSystem
 	pub delete_gameshow: Callback<i32>,
 	pub league_state : UseStateHandle<LeagueState>,
 	pub leagues : UseStateHandle<Vec<League>>,
-	pub collect_leagues: Callback<()>,
+	pub collect_leagues: Callback<i32>,
 	pub create_league: yew::Callback<yew::MouseEvent>,
 	pub delete_league: Callback<i32>,
 }
 
 pub fn collect_leagues(leagues_in: &UseStateHandle<Vec<League>>,
-	message: &UseStateHandle<String>) -> Callback<()>
+	message: &UseStateHandle<String>) -> Callback<i32>
 {
 	let leagues: UseStateHandle<Vec<League>> = leagues_in.clone();
 	let message: UseStateHandle<String> = message.clone();
-	Callback::from(move |_|
+	Callback::from(move |id_showseason: i32|
 	{
 		let leagues_inner: UseStateHandle<Vec<League>> = leagues.clone();
 		let message: UseStateHandle<String> = message.clone();
 		spawn_local(async move
 		{
-			let url:&str = concat!(PLATFORM_URL!(), "/leagues");
+			  let url:String = format!(concat!(PLATFORM_URL!(), "/leagues/{}"), id_showseason);
 			match Request::get(&url).send().await
 			{
 				Ok(resp) if resp.ok() =>
 				{
 					let fetched_leagues: Vec<League> = resp.json().await.unwrap_or_default();
 					leagues_inner.set(fetched_leagues);
+					message.set(format!("Successfully fetched all leagues with showseason[{}]", id_showseason));
 				}
 
 				_ => message.set("Failed to fetch leagues".into()),
@@ -221,18 +222,18 @@ pub fn collect_leagues(leagues_in: &UseStateHandle<Vec<League>>,
 
 pub fn create_league(league_state_in: &UseStateHandle<LeagueState>,
 	message: &UseStateHandle<String>,
-	collect_leagues: Callback<()>) -> Callback<MouseEvent>
+	collect_leagues: Callback<i32>) -> Callback<MouseEvent>
 {
 	return
 	{
 		let league_state: UseStateHandle<LeagueState> = league_state_in.clone();
 		let message: UseStateHandle<String> = message.clone();
-		let get_gameshows: Callback<()> = collect_leagues.clone();
+		let get_gameshows: Callback<i32> = collect_leagues.clone();
 		Callback::from(move |_|
 		{
 			let gameshow_state: UseStateHandle<LeagueState> = league_state.clone();
 			let message: UseStateHandle<String> = message.clone();
-			let get_gameshows: Callback<()> = get_gameshows.clone();
+			let get_gameshows: Callback<i32> = get_gameshows.clone();
 
 			spawn_local(async move
 			{
@@ -247,8 +248,7 @@ pub fn create_league(league_state_in: &UseStateHandle<LeagueState>,
 				{
 					Ok(resp) if resp.ok() =>
 					{
-						message.set("Game Show created successfully".into());
-						get_gameshows.emit(());
+						message.set("Game Shows created successfully".into());
 					}
 
 					_ => message.set("Failed to create game show".into()),
@@ -260,19 +260,15 @@ pub fn create_league(league_state_in: &UseStateHandle<LeagueState>,
 	};
 }
 
-pub fn delete_league(message: &UseStateHandle<String>,
-	collect_leagues: Callback<()>) -> Callback<i32>
+pub fn delete_league(message: &UseStateHandle<String>) -> Callback<i32>
 {
 	return
 	{
 		let message: UseStateHandle<String> = message.clone();
-		let collect_leagues_clone: Callback<()> = collect_leagues.clone();
 
 		Callback::from(move |id: i32|
 		{
 			let message: UseStateHandle<String> = message.clone();
-			let collect_leagues_inner: Callback<()> = collect_leagues_clone.clone();
-
 			spawn_local(async move
 			{
 				let url:String  = format!(concat!(PLATFORM_URL!(), "/leagues/{}"), id);
@@ -283,7 +279,6 @@ pub fn delete_league(message: &UseStateHandle<String>,
 					Ok(resp) if resp.ok() =>
 					{
 						message.set("League deleted successfully".into());
-						collect_leagues_inner.emit(());
 					}
 
 					_ => message.set("Failed to delete league".into()),
@@ -306,9 +301,9 @@ pub fn use_compile_gameshow_system(message: UseStateHandle<String>) -> GameShowS
 
 	let league_state : UseStateHandle<LeagueState> = use_state(|| LeagueState::from_default());
 	let leagues : UseStateHandle<Vec<League>> = use_state(Vec::new);
-	let collect_leagues: Callback<()> = collect_leagues(&leagues, &message);
+	let collect_leagues: Callback<i32> = collect_leagues(&leagues, &message);
 	let create_league: yew::Callback<yew::MouseEvent> = create_league(&league_state, &message, collect_leagues.clone());
-	let delete_league: Callback<i32> = delete_league(&message, collect_leagues.clone());
+	let delete_league: Callback<i32> = delete_league(&message);
 
 	return GameShowSystem { gameshow_state, gameshows, get_gameshows, create_gameshow, delete_gameshow, 
 		league_state, leagues, collect_leagues, create_league, delete_league};

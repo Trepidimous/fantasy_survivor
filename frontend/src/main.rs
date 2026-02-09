@@ -44,15 +44,15 @@ fn build_website(
 			<div class="container mx-auto p-4">
 				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Game Master Portal" }</h1>
 			{
-				build_showseason_mangement(
-					gameshow_system,
-					contestant_system)
+				build_showseason_mangement(gameshow_system, contestant_system)
 			}
 
 			{
-				build_user_management(
-					message,
-					user_system)
+				build_user_management( message, user_system)
+			}
+
+			{
+				build_league_management(gameshow_system)
 			}
 
 			</div>
@@ -62,15 +62,16 @@ fn build_website(
 
 fn build_league_management(gameshow_system : &GameShowSystem) -> Html
 {
+	let showseason_id = gameshow_system.league_state.id_showseason.unwrap_or(-1);
 	html!
 	{
-		/*
-		<button
-			onclick={gameshow_system.collect_leagues.reform(|_| ())}
-			class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
-			{ "Fetch Leagues" }
-		</button>
-		*/
+		<>
+			<button
+				onclick={gameshow_system.collect_leagues.clone().reform(move |_| showseason_id )}
+				class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
+				{ "Fetch Leagues" }
+			</button>
+		</>
 	}
 }
 
@@ -351,7 +352,7 @@ fn build_user_management(
 			<button
 				onclick={user_system.get_users.reform(|_| ())}
 				class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
-				{ "Fetch User List" }
+				{ "Fetch Users" }
 			</button>
 
 			<h2 class="text-2xl font-bold text-[#FF8C00] mb-2">{ "User List" }</h2>
