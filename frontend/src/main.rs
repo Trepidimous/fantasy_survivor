@@ -62,8 +62,8 @@ fn build_website(
 
 fn build_league_management(gameshow_system : &GameShowSystem) -> Html
 {
-
 	let gameshow_state_clone: UseStateHandle<GameShowState> = gameshow_system.gameshow_state.clone();
+	let league_state_clone: UseStateHandle<LeagueState> = gameshow_system.league_state.clone();
 
 	let on_select_league: Callback<Event> = 
 	{
@@ -74,9 +74,13 @@ fn build_league_management(gameshow_system : &GameShowSystem) -> Html
 			
 			let value: i32 = value_string.parse().unwrap_or(-1);
 
-			let mut gameshow_state_update = (*gameshow_state_clone).clone();
+			let mut gameshow_state_update: GameShowState = (*gameshow_state_clone).clone();
 			gameshow_state_update.id = Some(value);
 			gameshow_state_clone.set(gameshow_state_update);
+
+			let mut league_state_update: LeagueState = (*league_state_clone).clone();
+			league_state_update.id_showseason = Some(value);
+			league_state_clone.set(league_state_update);
 			
 			let output = format!("Selected League ID [{}]", value);
 			logger::logger::log(output);
@@ -87,11 +91,46 @@ fn build_league_management(gameshow_system : &GameShowSystem) -> Html
 	html!
 	{
 		<>
+
+			<input placeholder="[new league name]"
+				value={gameshow_system.league_state.name.clone()}
+				oninput={Callback::from(
+				{
+					let league_state_clone = gameshow_system.league_state.clone();
+					move |e: InputEvent|
+					{
+						let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+
+						let edited_league: LeagueState = LeagueState::new(
+							league_state_clone.id,
+							input.value(),
+							league_state_clone.id_showseason
+						);
+
+						league_state_clone.set(edited_league);
+					}
+				})}
+				class="border rounded px-4 py-2 mr-2"
+			/>
+
 			<button
-				onclick={gameshow_system.collect_leagues.clone().reform(move |_| showseason_id )}
-				class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
-				{ "Fetch Leagues" }
+				onclick=
+				{
+					gameshow_system.create_league.clone().reform(move |_| showseason_id)
+				}
+				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+				{
+					"Create League"
+				}
 			</button>
+
+			<div class="mb-4">
+				<button
+					onclick={gameshow_system.collect_leagues.clone().reform(move |_| showseason_id )}
+					class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mb-4">
+					{ "Fetch Leagues" }
+				</button>
+			</div>
 
 			<div class="mb-4">
 				<select onchange={on_select_league}>

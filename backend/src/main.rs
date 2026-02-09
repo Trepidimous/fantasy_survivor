@@ -139,7 +139,6 @@ async fn select_contestant_by_name(
 	name: String
 	) -> Result<Json<Contestant>, Custom<String>>
 {
-
 	println!("SelConByNam>>>{}", name);
 
 	return manager.select_contestant_by_name(name).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
@@ -167,7 +166,7 @@ async fn enroll_contestant(manager : &State<GameShowManager>, contestant: Json<C
 															contestant.nickname.clone().unwrap() ).await.map_err(|e: String| e);
 }
 
-#[get("/api/leagues/<id_showseason>")]
+#[get("/api/leagues/from_season?<id_showseason>")]
 async fn collect_leagues(
 	manager : &State<GameShowManager>,
 	id_showseason : i32) -> Result<Json<Vec<League>>, Custom<String>>
@@ -181,6 +180,7 @@ async fn create_league(
 	league : Json<League>
 	) -> Result<(), String>
 {
+	println!("BE-Main - create_league[{}], [{}]", league.name, league.id_showseason.unwrap_or(-1));
 	let creation_result = manager.create_league(&league).await.map_err(|e: String| e);
 	return creation_result;
 }

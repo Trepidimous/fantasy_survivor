@@ -4,6 +4,7 @@ use gloo::net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 
 use crate::web_server::PLATFORM_URL;
+use crate::logger;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GameShow
@@ -189,7 +190,7 @@ pub struct GameShowSystem
 	pub league_state : UseStateHandle<LeagueState>,
 	pub leagues : UseStateHandle<Vec<League>>,
 	pub collect_leagues: Callback<i32>,
-	pub create_league: yew::Callback<yew::MouseEvent>,
+	pub create_league: yew::Callback<i32>,
 	pub delete_league: Callback<i32>,
 }
 
@@ -200,18 +201,21 @@ pub fn collect_leagues(leagues_in: &UseStateHandle<Vec<League>>,
 	let message: UseStateHandle<String> = message.clone();
 	Callback::from(move |id_showseason: i32|
 	{
-		let leagues_inner: UseStateHandle<Vec<League>> = leagues.clone();
+		let leagues: UseStateHandle<Vec<League>> = leagues.clone();
 		let message: UseStateHandle<String> = message.clone();
 		spawn_local(async move
 		{
-			  let url:String = format!(concat!(PLATFORM_URL!(), "/leagues/{}"), id_showseason);
+			logger::logger::log("Select League By ShowSeason-Id >>>".to_string() + id_showseason.to_string().as_str());
+
+			let url:String = format!(concat!(PLATFORM_URL!(), "/leagues/from_season?id_showseason={}"), id_showseason);
 			match Request::get(&url).send().await
 			{
 				Ok(resp) if resp.ok() =>
 				{
 					let fetched_leagues: Vec<League> = resp.json().await.unwrap_or_default();
-					leagues_inner.set(fetched_leagues);
-					message.set(format!("Successfully fetched all leagues with showseason[{}]", id_showseason));
+					let num_leages = fetched_leagues.clone().len();
+					leagues.set(fetched_leagues);
+					message.set(format!("Successfully fetched all leagues with showseason[{}] num_leages[{}]", id_showseason, num_leages));
 				}
 
 				_ => message.set("Failed to fetch leagues".into()),
@@ -221,40 +225,38 @@ pub fn collect_leagues(leagues_in: &UseStateHandle<Vec<League>>,
 }
 
 pub fn create_league(league_state_in: &UseStateHandle<LeagueState>,
-	message: &UseStateHandle<String>,
-	collect_leagues: Callback<i32>) -> Callback<MouseEvent>
+	message: &UseStateHandle<String>) -> Callback<i32>
 {
 	return
 	{
 		let league_state: UseStateHandle<LeagueState> = league_state_in.clone();
 		let message: UseStateHandle<String> = message.clone();
-		let get_gameshows: Callback<i32> = collect_leagues.clone();
-		Callback::from(move |_|
+		Callback::from(move |showseason_id: i32|
 		{
-			let gameshow_state: UseStateHandle<LeagueState> = league_state.clone();
+			let league_state: UseStateHandle<LeagueState> = league_state.clone();
 			let message: UseStateHandle<String> = message.clone();
-			let get_gameshows: Callback<i32> = get_gameshows.clone();
 
 			spawn_local(async move
 			{
-				let gameshow_data: serde_json::Value = serde_json::json!({ "name": gameshow_state.name });
+				logger::logger::log("create_league[FE] >>>".to_string() + league_state.name.as_str() + " ,,, " + showseason_id.to_string().as_str() );
+				let league_data: serde_json::Value = serde_json::json!( { "name": league_state.name, "id_showseason": showseason_id } );
 				let url:&str = concat!(PLATFORM_URL!(), "/leagues");
 				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
 					.header("Content-Type", "application/json")
-					.body(gameshow_data.to_string())
+					.body(league_data.to_string())
 					.send().await;
 
 				match response
 				{
 					Ok(resp) if resp.ok() =>
 					{
-						message.set("Game Shows created successfully".into());
+						message.set("League created successfully".into());
 					}
 
-					_ => message.set("Failed to create game show".into()),
+					_ => message.set("Failed to create league".into()),
 				}
 
-				gameshow_state.set(LeagueState::new(None, "".to_string(), None));
+				league_state.set(LeagueState::new(None, "".to_string(), None));
 			});
 		})
 	};
@@ -302,7 +304,7 @@ pub fn use_compile_gameshow_system(message: UseStateHandle<String>) -> GameShowS
 	let league_state : UseStateHandle<LeagueState> = use_state(|| LeagueState::from_default());
 	let leagues : UseStateHandle<Vec<League>> = use_state(Vec::new);
 	let collect_leagues: Callback<i32> = collect_leagues(&leagues, &message);
-	let create_league: yew::Callback<yew::MouseEvent> = create_league(&league_state, &message, collect_leagues.clone());
+	let create_league: yew::Callback<i32> = create_league(&league_state, &message);
 	let delete_league: Callback<i32> = delete_league(&message);
 
 	return GameShowSystem { gameshow_state, gameshows, get_gameshows, create_gameshow, delete_gameshow, 

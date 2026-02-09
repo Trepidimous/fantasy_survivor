@@ -97,6 +97,7 @@ impl GameShowManager
 
 	pub async fn create_league(&self, league: &League) -> Result<(), String>
 	{
+		println!("G.S.M. create_league[{}], [{}]", league.name, league.id_showseason.unwrap_or(-1));
 		return self.league_repository.create_league(league).await;
 	}
 

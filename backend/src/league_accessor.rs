@@ -51,6 +51,7 @@ impl LeagueRepository
 
 	pub async fn create_league(&self, league: &League) -> Result<(), String>
 	{
+		println!("create_league[{}], [{}]", league.name, league.id_showseason.unwrap_or(-1));
 		self.connector.storage
 			.execute(
 				"INSERT INTO leagues (name, id_showseason) VALUES ($1, $2)",
