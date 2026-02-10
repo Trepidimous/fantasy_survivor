@@ -185,11 +185,10 @@ async fn create_league(
 	return creation_result;
 }
 
-#[delete("/api/leagues/<league_id>/show/<id_seasonshow>")]
-async fn delete_league(manager : &State<GameShowManager>, league_id: i32, id_seasonshow : i32) -> Result<Json<Vec<League>>, Custom<String>>
+#[delete("/api/leagues/<league_id>")]
+async fn delete_league(manager : &State<GameShowManager>, league_id: i32) -> Result<(), String>
 {
-	let deletion_result = manager.delete_league(league_id).await.map_err(|e: String| e);
-	return manager.collect_leagues(id_seasonshow).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+	return manager.delete_league(league_id).await.map_err(|e: String| e);
 }
 
 ///// These are just fake endpoints added in to stop server warnings //////

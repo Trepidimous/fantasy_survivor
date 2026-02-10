@@ -79,7 +79,7 @@ fn build_league_management(gameshow_system : &GameShowSystem) -> Html
 			gameshow_state_clone.set(gameshow_state_update);
 
 			let mut league_state_update: LeagueState = (*league_state_clone).clone();
-			league_state_update.id_showseason = Some(value);
+			league_state_update.id = Some(value);
 			league_state_clone.set(league_state_update);
 			
 			let output = format!("Selected League ID [{}]", value);
@@ -121,6 +121,19 @@ fn build_league_management(gameshow_system : &GameShowSystem) -> Html
 				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 				{
 					"Create League"
+				}
+			</button>
+
+			<button
+				onclick={gameshow_system.delete_league.clone().reform(
+				{
+					let league_state_clone = gameshow_system.league_state.clone();
+					move |_| league_state_clone.id.unwrap_or(-1)
+				})}
+
+				class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+				{
+					"Delete League"
 				}
 			</button>
 
