@@ -202,6 +202,7 @@ fn gameshow_preflight() -> Status
 }
 
 #[options("/api/gameshows/<id>")]
+#[allow(unused_variables)]
 fn gameshow_preflight_for_delete(id : i32) -> Status
 {
 	Status::NoContent
@@ -216,6 +217,7 @@ fn create_contestant_preflight(
 }
 
 #[options("/api/contestants/<name>")]
+#[allow(unused_variables)]
 async fn delete_contestant_preflight(name: &str) -> Result<(), String>
 {
 	return Ok(());
