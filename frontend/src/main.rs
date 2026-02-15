@@ -48,7 +48,7 @@ fn build_website(
 			}
 
 			{
-				build_user_management( message, user_system)
+				build_user_management(message, user_system, gameshow_system)
 			}
 
 			{
@@ -364,7 +364,8 @@ fn build_showseason_mangement(
 
 fn build_user_management(
 	message: &UseStateHandle<String>,
-	user_system : &UserSystem
+	user_system : &UserSystem,
+	gameshow_system : &GameShowSystem
 ) -> Html
 {
 	html!
@@ -457,6 +458,7 @@ fn build_user_management(
 				for (*user_system.users).iter().map(|user|
 				{
 					let user_id = user.id;
+					let league_id = gameshow_system.league_state.id.unwrap_or(-1);
 					html!
 					{
 						<li class="mb-2">
@@ -471,6 +473,13 @@ fn build_user_management(
 							class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
 							{ "Delete" }
 						</button>
+
+						<button
+							onclick={gameshow_system.enter_user_into_league.clone().reform(move |_| (user_id, league_id) )}
+							class="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
+							{ "Add To League" }
+						</button>
+
 					</li>
 				}
 			})}

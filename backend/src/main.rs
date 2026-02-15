@@ -51,7 +51,7 @@ async fn rocket() -> _
 									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant,
 									enroll_contestant,
 									gameshow_preflight, gameshow_preflight_for_delete, create_contestant_preflight, delete_contestant_preflight,
-									collect_leagues, create_league, delete_league])
+									collect_leagues, create_league, delete_league, add_user_to_league])
 		.attach(cors)
 }
 
@@ -189,6 +189,12 @@ async fn create_league(
 async fn delete_league(manager : &State<GameShowManager>, league_id: i32) -> Result<(), String>
 {
 	return manager.delete_league(league_id).await.map_err(|e: String| e);
+}
+
+#[post("/api/leagues?<user_id>&<league_id>")]
+async fn add_user_to_league(manager : &State<GameShowManager>, user_id: i32, league_id: i32) -> Result<(), String>
+{
+	return manager.add_user_to_league(user_id, league_id).await.map_err(|e: String| e);
 }
 
 ///// These are just fake endpoints added in to stop server warnings //////
