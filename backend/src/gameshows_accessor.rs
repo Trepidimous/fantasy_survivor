@@ -27,42 +27,56 @@ impl GameShowRepository
 
 	async fn initialize_storage(&self) -> ()
 	{
+		self.initialize_gameshows().await;
+
+		self.initialize_contestants().await;
+
+		self.initialize_gameshow_contestants().await;
+	}
+
+	async fn initialize_gameshows(&self)
+	{
 		self.connector.storage
 			.execute(
 				"CREATE TABLE IF NOT EXISTS game_shows (
-					game_show_id SERIAL PRIMARY KEY,
-					name TEXT DEFAULT 'Jeffs Jamboree'
+				game_show_id SERIAL PRIMARY KEY,
+				name TEXT DEFAULT 'Jeffs Jamboree'
 				)",
-				&[]
+			&[]
 			).await
-			.expect("Failed to create table");
+		.expect("Failed to create table");
+	}
 
+	async fn initialize_contestants(&self)
+	{
 		self.connector.storage
 			.execute(
 				"CREATE TABLE IF NOT EXISTS contestants (
-					contestant_id SERIAL PRIMARY KEY,
-					name TEXT NOT NULL
+				contestant_id SERIAL PRIMARY KEY,
+				name TEXT NOT NULL
 				)",
 				&[]
 			).await
-			.expect("Failed to create table");
+		.expect("Failed to create table");
+	}
 
+	async fn initialize_gameshow_contestants(&self)
+	{
 		self.connector.storage
 			.execute(
 				"CREATE TABLE IF NOT EXISTS game_show_contestants (
-					contestant_id INTEGER,
-					game_show_id INTEGER,
-					nickname TEXT,
-					PRIMARY KEY (contestant_id, game_show_id),
-					FOREIGN KEY (contestant_id) REFERENCES contestants(contestant_id)
-						ON DELETE CASCADE,
-					FOREIGN KEY (game_show_id) REFERENCES game_shows(game_show_id)
-						ON DELETE CASCADE
+				contestant_id INTEGER,
+				game_show_id INTEGER,
+				nickname TEXT,
+				PRIMARY KEY (contestant_id, game_show_id),
+				FOREIGN KEY (contestant_id) REFERENCES contestants(contestant_id)
+					ON DELETE CASCADE,
+				FOREIGN KEY (game_show_id) REFERENCES game_shows(game_show_id)
+					ON DELETE CASCADE
 				)",
 				&[]
 			).await
-			.expect("Failed to create table");
-
+		.expect("Failed to create table");
 	}
 
 	pub async fn collect_game_shows(&self) -> Result<Vec<GameShow>, String>
