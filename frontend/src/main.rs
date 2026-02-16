@@ -20,9 +20,9 @@ fn main()
 #[derive(Clone, Routable, PartialEq)]
 enum Route
 {
-	#[at("/")]
+	#[at("/gm-portal")]
 	GameMasterPortal,
-	#[at("/player-portal")]
+	#[at("/")]
 	PlayerPortal,
 }
 
@@ -36,10 +36,10 @@ fn app() -> Html
 
 	let portal_router = 
 	{
-		let message = message.clone();
-		let user_system = user_system.clone();
-		let gameshow_system = gameshow_system.clone();
-		let contestant_system = contestant_system.clone();
+		let message: UseStateHandle<String> = message.clone();
+		let user_system: UserSystem = user_system.clone();
+		let gameshow_system: GameShowSystem = gameshow_system.clone();
+		let contestant_system: ContestantSystem = contestant_system.clone();
 
 		move | routes: Route | match routes
 		{
