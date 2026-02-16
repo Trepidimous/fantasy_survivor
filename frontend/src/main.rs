@@ -21,9 +21,9 @@ fn main()
 #[derive(Clone, Routable, PartialEq)]
 enum Route
 {
-	#[at("/gm-portal")]
+	#[at("/gamemaster-portal")]
 	GameMasterPortal,
-	#[at("/")]
+	#[at("/player-portal")]
 	PlayerPortal,
 }
 

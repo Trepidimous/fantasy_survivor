@@ -43,8 +43,10 @@ impl LeagueRepository
 			.execute(
 				"CREATE TABLE IF NOT EXISTS league_members (
 						id SERIAL PRIMARY KEY,
-						league_id INTEGER NOT NULL REFERENCES leagues(id) ON DELETE CASCADE,
-						user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+						league_id INTEGER NOT NULL REFERENCES leagues(id)
+							ON DELETE CASCADE,
+						user_id INTEGER NOT NULL REFERENCES users(id)
+							ON DELETE CASCADE,
 						UNIQUE(league_id, user_id)
 				)",
 				&[]

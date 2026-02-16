@@ -54,8 +54,10 @@ impl GameShowRepository
 					game_show_id INTEGER,
 					nickname TEXT,
 					PRIMARY KEY (contestant_id, game_show_id),
-					FOREIGN KEY (contestant_id) REFERENCES contestants(contestant_id),
+					FOREIGN KEY (contestant_id) REFERENCES contestants(contestant_id)
+						ON DELETE CASCADE,
 					FOREIGN KEY (game_show_id) REFERENCES game_shows(game_show_id)
+						ON DELETE CASCADE
 				)",
 				&[]
 			).await
