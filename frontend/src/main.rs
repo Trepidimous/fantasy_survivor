@@ -1,4 +1,5 @@
 use yew::prelude::*;
+use yew_router::prelude::*;
 
 mod web_server;
 mod users;
@@ -16,28 +17,53 @@ fn main()
 	yew::Renderer::<App>::new().render();
 }
 
+#[derive(Clone, Routable, PartialEq)]
+enum Route
+{
+	#[at("/")]
+	GameMasterPortal,
+	#[at("/player-portal")]
+	PlayerPortal,
+}
+
 #[function_component(App)]
 fn app() -> Html
 {
 	let message: UseStateHandle<String> = use_state(|| "".to_string());
+	let user_system: UserSystem = users::users::use_compile_user_system(message.clone());
+	let gameshow_system: GameShowSystem = gameshows::gameshows::use_compile_gameshow_system(message.clone());
+	let contestant_system: ContestantSystem = contestants::contestants::use_compile_contestant_system(message.clone());
 
-	let user_system = users::users::use_compile_user_system(message.clone());
-	let gameshow_system = gameshows::gameshows::use_compile_gameshow_system(message.clone());
-	let contestant_system = contestants::contestants::use_compile_contestant_system(message.clone());
+	let portal_router = 
+	{
+		let message = message.clone();
+		let user_system = user_system.clone();
+		let gameshow_system = gameshow_system.clone();
+		let contestant_system = contestant_system.clone();
 
-	build_website(&message, &user_system,
-		&gameshow_system,
-		&contestant_system)
+		move | routes: Route | match routes
+		{
+			Route::GameMasterPortal => build_gamemaster_portal_page(&message, &user_system, &gameshow_system, &contestant_system),
+			Route::PlayerPortal => html! { <h1>{ "Player Portal - Coming Soon!" }</h1> }
+		}
+	};
+
+	html!
+	{
+		<BrowserRouter>
+			<Switch<Route> render={portal_router} />
+		</BrowserRouter>
+	}
+
 }
 
-fn build_website(
+fn build_gamemaster_portal_page(
 	message: &UseStateHandle<String>,
 	user_system : &UserSystem,
 	gameshow_system : &GameShowSystem,
 	contestant_system : &ContestantSystem
 ) -> Html
 {
-
 	html!
 	{
 		<body class="bg-[#121212]  min-h-screen">

@@ -197,6 +197,7 @@ pub fn enroll_contestant_onto_show(
 	};
 }
 
+#[derive(Clone)]
 pub struct ContestantSystem
 {
 	pub contestant_state : UseStateHandle<ContestantState>,

@@ -217,6 +217,7 @@ pub fn edit_user(user_state : &UseStateHandle<UserState>, users : &UseStateHandl
 	};
 }
 
+#[derive(Clone)]
 pub struct UserSystem
 {
 	pub user_state: UseStateHandle<UserState>,

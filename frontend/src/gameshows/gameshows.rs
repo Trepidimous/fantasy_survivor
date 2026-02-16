@@ -180,6 +180,7 @@ impl LeagueState
 	}
 }
 
+#[derive(Clone)]
 pub struct GameShowSystem
 {
 	pub gameshow_state: UseStateHandle<GameShowState>,
