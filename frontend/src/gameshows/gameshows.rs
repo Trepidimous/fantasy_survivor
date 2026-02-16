@@ -192,7 +192,8 @@ pub struct GameShowSystem
 	pub collect_leagues: Callback<i32>,
 	pub create_league: yew::Callback<i32>,
 	pub delete_league: Callback<i32>,
-	pub enter_user_into_league : Callback<(i32, i32)>
+	pub enter_user_into_league : Callback<(i32, i32)>,
+	pub remove_user_from_league : yew::Callback<(i32, i32)>
 }
 
 pub fn collect_leagues(leagues_in: &UseStateHandle<Vec<League>>,
@@ -323,6 +324,38 @@ pub fn enter_user_into_league(message: &UseStateHandle<String>) -> Callback<(i32
 	};
 }
 
+fn remove_user_from_league(message: &UseStateHandle<String>) -> Callback<(i32, i32)>
+{
+	return
+	{
+		let message: UseStateHandle<String> = message.clone();
+		Callback::from(move | (id_user, id_league) : (i32, i32) |
+		{
+
+			logger::logger::log("removing user >>>".to_string() + id_user.to_string().as_str() + " from league[" + id_league.to_string().as_str());
+			let message: UseStateHandle<String> = message.clone();
+
+			spawn_local(async move
+			{
+				let url:String = format!(concat!(PLATFORM_URL!(), "/leagues?user_id={}&league_id={}"), id_user, id_league);
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::delete(&url)
+					.header("Content-Type", "application/json")
+					.send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set(format!("Player [{}] removed successfully from league [{}]", id_user.to_string(), id_league.to_string()).into());
+					}
+
+					_ => message.set(format!("Failed to remove player[{}] from league[{}]", id_user.to_string(), id_league.to_string()).into()),
+				}
+			});
+		})
+	};
+}
+
 #[hook]
 pub fn use_compile_gameshow_system(message: UseStateHandle<String>) -> GameShowSystem
 {
@@ -339,7 +372,8 @@ pub fn use_compile_gameshow_system(message: UseStateHandle<String>) -> GameShowS
 	let create_league: yew::Callback<i32> = create_league(&league_state, &message);
 	let delete_league: Callback<i32> = delete_league(&message);
 	let enter_user_into_league : yew::Callback<(i32, i32)> = enter_user_into_league(&message);
+	let remove_user_from_league : yew::Callback<(i32, i32)> = remove_user_from_league(&message);
 
 	return GameShowSystem { gameshow_state, gameshows, get_gameshows, create_gameshow, delete_gameshow,
-		league_state, leagues, collect_leagues, create_league, delete_league, enter_user_into_league};
+		league_state, leagues, collect_leagues, create_league, delete_league, enter_user_into_league, remove_user_from_league };
 }

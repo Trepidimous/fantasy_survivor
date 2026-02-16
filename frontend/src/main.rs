@@ -480,6 +480,12 @@ fn build_user_management(
 							{ "Add To League" }
 						</button>
 
+						<button
+							onclick={gameshow_system.remove_user_from_league.clone().reform(move |_| (user_id, league_id) )}
+							class="ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+							{ "Remove From League" }
+						</button>
+
 					</li>
 				}
 			})}

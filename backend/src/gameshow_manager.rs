@@ -116,4 +116,9 @@ impl GameShowManager
 		return self.league_repository.add_user_to_league(user_id, league_id).await;
 	}
 
+	pub async fn remove_user_from_league(&self, user_id: i32, league_id: i32) -> Result<(), String>
+	{
+		return self.league_repository.remove_user_from_league(user_id, league_id).await;
+	}
+
 }

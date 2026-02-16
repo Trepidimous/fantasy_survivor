@@ -98,4 +98,16 @@ impl LeagueRepository
 		Ok(())
 	}
 
+	pub async fn remove_user_from_league(&self, user_id: i32, league_id: i32) -> Result<(), String>
+	{
+		self.connector.storage
+			.execute(
+					"DELETE FROM league_members WHERE user_id = $1 AND league_id = $2",
+					&[&user_id, &league_id]
+			).await
+			.map_err(|e: tokio_postgres::Error| e.to_string())?;
+		
+		Ok(())
+	}
+
 }
