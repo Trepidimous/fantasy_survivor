@@ -7,6 +7,7 @@ mod gameshows;
 mod contestants;
 mod logger;
 mod gamemaster_portal;
+mod player_portal;
 
 use crate::users::users::*;
 use crate::gameshows::gameshows::*;
@@ -44,7 +45,7 @@ fn app() -> Html
 		move | routes: Route | match routes
 		{
 			Route::GameMasterPortal => gamemaster_portal::gamemaster_portal::build_gamemaster_portal_page(&message, &user_system, &gameshow_system, &contestant_system),
-			Route::PlayerPortal => html! { <h1>{ "Player Portal - Coming Soon!" }</h1> }
+			Route::PlayerPortal => player_portal::player_portal::build_player_portal_page(&message, &user_system, &gameshow_system, &contestant_system)
 		}
 	};
 
