@@ -48,7 +48,7 @@ async fn rocket() -> _
 		.manage(gameshow_manager)
 		.mount("/", routes![	add_user, collect_users, update_user, delete_user,
 									collect_gameshows, add_gameshow, delete_gameshow,
-									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant,
+									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant, fetch_contestants_on_show,
 									enroll_contestant, eliminate_contestant, medevac_contestant,
 									gameshow_preflight, gameshow_preflight_for_delete, create_contestant_preflight, delete_contestant_preflight,
 									enroll_contestant_preflight, add_user_to_league_preflight,
@@ -151,6 +151,15 @@ async fn collect_contestants(
 	) -> Result<Json<Vec<Contestant>>, Custom<String>>
 {
 	return manager.collect_all_contestants().await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
+}
+
+#[get("/api/contestants/on_show?<game_show_id>")]
+async fn fetch_contestants_on_show(
+	manager : &State<GameShowManager>,
+	game_show_id: i32
+	) -> Result<Json<Vec<Contestant>>, Custom<String>>
+{
+	return manager.fetch_contestants_on_show(game_show_id).await.map(Json).map_err(|e: String| Custom(Status::InternalServerError, e));
 }
 
 #[delete("/api/contestants/<name>")]

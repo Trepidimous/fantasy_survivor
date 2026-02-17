@@ -179,6 +179,37 @@ fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	};
 }
 
+fn fetch_contestants_on_show(message: &UseStateHandle<String>) -> Callback<i32>
+{
+	return
+	{
+		let message: UseStateHandle<String> = message.clone();
+		Callback::from(move |game_show_id: i32|
+		{
+			let message: UseStateHandle<String> = message.clone();
+
+			spawn_local(async move
+			{
+				let url: String = format!(concat!(PLATFORM_URL!(), "/contestants/on_show?game_show_id={}"), game_show_id);
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::get(&url).send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						if let Ok(json) = resp.json::<serde_json::Value>().await
+						{
+							message.set(format!("Fetched contestants on show successfully. ShowID[{}], Response: {}", game_show_id, json.to_string()));
+						}
+					}
+
+					_ => message.set("Failed to fetch contestants on show".into()),
+				}
+			});
+		})
+	};
+}
+
 fn enroll_contestant_onto_show(
 	message: &UseStateHandle<String>) -> Callback<ContestantState>
 {
@@ -289,6 +320,7 @@ pub struct ContestantSystem
 	pub create_contestant: yew::Callback<yew::MouseEvent>,
 	pub select_contestant: yew::Callback<yew::MouseEvent>,
 	pub delete_contestant: Callback<String>,
+	pub fetch_contestants_on_show : Callback<i32>,
 	pub enroll_contestant_onto_show: Callback<ContestantState>,
 	pub eliminate_contestant_from_show: Callback<ContestantState>,
 	pub medevac_contestant_from_show: Callback<ContestantState>
@@ -302,10 +334,12 @@ pub fn use_compile_contestant_system(message: UseStateHandle<String>) -> Contest
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
 	let select_contestant : yew::Callback<yew::MouseEvent> = select_contestant_by_name(&contestant_state, &message);
 	let delete_contestant : Callback<String> = delete_contestant(&contestant_state, &message);
+	let fetch_contestants_on_show : Callback<i32> = fetch_contestants_on_show(&message);
 	let enroll_contestant_onto_show : Callback<ContestantState> = enroll_contestant_onto_show(&message);
 	let eliminate_contestant_from_show : Callback<ContestantState> = eliminiate_contestant_from_show(&message);
 	let medevac_contestant_from_show : Callback<ContestantState> = medevac_contestant(&message);
 
 	return ContestantSystem { contestant_state, create_contestant, select_contestant, delete_contestant,
+		fetch_contestants_on_show,
 		enroll_contestant_onto_show, eliminate_contestant_from_show, medevac_contestant_from_show };
 }

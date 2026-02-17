@@ -139,4 +139,9 @@ impl GameShowManager
 		return self.league_repository.remove_user_from_league(user_id, league_id).await;
 	}
 
+	pub async fn fetch_contestants_on_show(&self, game_show_id: i32) -> Result<Vec<Contestant>, String>
+	{
+		return self.repo.fetch_contestants_on_show(game_show_id).await;
+	}
+
 }

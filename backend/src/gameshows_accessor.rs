@@ -223,4 +223,29 @@ impl GameShowRepository
 		return Ok(());
 	}
 
+	pub async fn fetch_contestants_on_show(&self, game_show_id: i32) -> Result<Vec<Contestant>, String>
+	{
+		let contestants: Vec<Contestant> = self.connector.storage
+			.query(
+				"SELECT c.contestant_id, c.name, gsc.nickname, gsc.eliminated_on_round, gsc.was_medically_evacuated
+				FROM contestants c
+				JOIN game_show_contestants gsc ON c.contestant_id = gsc.contestant_id
+				WHERE gsc.game_show_id = $1",
+				&[&game_show_id]
+			).await
+			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
+			.iter()
+			.map(|row: &tokio_postgres::Row| Contestant {
+				id: Some(row.get(0)),
+				name: row.get(1),
+				nickname: row.get(2),
+				round_number: row.get(3),
+				was_medically_evacuated: row.get(4),
+				id_showseason: Some(game_show_id)
+			})
+			.collect::<Vec<Contestant>>();
+
+		return Ok(contestants);
+	}
+
 }
