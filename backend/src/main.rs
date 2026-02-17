@@ -51,6 +51,7 @@ async fn rocket() -> _
 									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant,
 									enroll_contestant, eliminate_contestant, medevac_contestant,
 									gameshow_preflight, gameshow_preflight_for_delete, create_contestant_preflight, delete_contestant_preflight,
+									enroll_contestant_preflight,
 									collect_leagues, create_league, delete_league, add_user_to_league, remove_user_from_league])
 		.attach(cors)
 }
@@ -247,6 +248,13 @@ fn create_contestant_preflight(
 #[options("/api/contestants/<name>")]
 #[allow(unused_variables)]
 async fn delete_contestant_preflight(name: &str) -> Result<(), String>
+{
+	return Ok(());
+}
+
+#[options("/api/contestants/enroll")]
+#[allow(unused_variables)]
+async fn enroll_contestant_preflight() -> Result<(), String>
 {
 	return Ok(());
 }
