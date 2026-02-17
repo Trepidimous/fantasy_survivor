@@ -163,7 +163,7 @@ async fn enroll_contestant(manager : &State<GameShowManager>, contestant: Json<C
 {
 	return manager.enter_contestant_onto_show(contestant.id.unwrap(), 
 															contestant.id_showseason.unwrap(),
-															contestant.nickname.clone().unwrap() ).await.map_err(|e: String| e);
+															contestant.nickname.clone().unwrap_or("".to_string()) ).await.map_err(|e: String| e);
 }
 
 #[post("/api/contestants/elim", data = "<contestant>")]
