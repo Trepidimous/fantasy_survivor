@@ -25,3 +25,4 @@ start cmd /k "color A & cargo build --target wasm32-unknown-unknown & trunk serv
 TIMEOUT /T 3 /NOBREAK
 
 start "" http://127.0.0.1:8080/gamemaster-portal
+start "" http://127.0.0.1:8080/player-portal

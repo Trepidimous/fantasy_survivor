@@ -55,7 +55,7 @@ impl ContestantState
 	}
 }
 
-pub fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
+fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	message: &UseStateHandle<String>) -> yew::Callback<yew::MouseEvent>
 {
 	return
@@ -104,7 +104,7 @@ pub fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	};
 }
 
-pub fn select_contestant_by_name(
+fn select_contestant_by_name(
 	contestant_state: &UseStateHandle<ContestantState>,
 	message: &UseStateHandle<String>) -> yew::Callback<yew::MouseEvent>
 {
@@ -148,7 +148,7 @@ pub fn select_contestant_by_name(
 	};
 }
 
-pub fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
+fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	message: &UseStateHandle<String>) -> Callback<String>
 {
 	return
@@ -179,7 +179,7 @@ pub fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	};
 }
 
-pub fn enroll_contestant_onto_show(
+fn enroll_contestant_onto_show(
 	message: &UseStateHandle<String>) -> Callback<ContestantState>
 {
 	return
@@ -214,7 +214,7 @@ pub fn enroll_contestant_onto_show(
 	};
 }
 
-pub fn eliminiate_contestant_from_show(message: &UseStateHandle<String>) -> Callback<ContestantState>
+fn eliminiate_contestant_from_show(message: &UseStateHandle<String>) -> Callback<ContestantState>
 {
 	return
 	{
@@ -280,6 +280,7 @@ fn medevac_contestant(message: &UseStateHandle<String>) -> Callback<ContestantSt
 		})
 	};
 }
+
 
 #[derive(Clone)]
 pub struct ContestantSystem
