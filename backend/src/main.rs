@@ -49,7 +49,7 @@ async fn rocket() -> _
 		.mount("/", routes![	add_user, collect_users, update_user, delete_user,
 									collect_gameshows, add_gameshow, delete_gameshow,
 									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant,
-									enroll_contestant,
+									enroll_contestant, eliminate_contestant, medevac_contestant,
 									gameshow_preflight, gameshow_preflight_for_delete, create_contestant_preflight, delete_contestant_preflight,
 									collect_leagues, create_league, delete_league, add_user_to_league, remove_user_from_league])
 		.attach(cors)
@@ -164,6 +164,22 @@ async fn enroll_contestant(manager : &State<GameShowManager>, contestant: Json<C
 	return manager.enter_contestant_onto_show(contestant.id.unwrap(), 
 															contestant.id_showseason.unwrap(),
 															contestant.nickname.clone().unwrap() ).await.map_err(|e: String| e);
+}
+
+#[post("/api/contestants/elim", data = "<contestant>")]
+async fn eliminate_contestant(manager : &State<GameShowManager>, contestant: Json<Contestant>) -> Result<(), String>
+{
+	return manager.eliminiate_contestant_from_show(contestant.id.unwrap(), 
+															contestant.id_showseason.unwrap(),
+															contestant.round_number).await.map_err(|e: String| e);
+}
+
+#[post("/api/contestants/medevac", data = "<contestant>")]
+async fn medevac_contestant(manager : &State<GameShowManager>, contestant: Json<Contestant>) -> Result<(), String>
+{
+	return manager.medically_evacuate_contestant_from_show(contestant.id.unwrap(), 
+															contestant.id_showseason.unwrap(),
+															contestant.round_number).await.map_err(|e: String| e);
 }
 
 #[get("/api/leagues/from_season?<id_showseason>")]

@@ -72,7 +72,9 @@ impl GameShowRepository
 				FOREIGN KEY (contestant_id) REFERENCES contestants(contestant_id)
 					ON DELETE CASCADE,
 				FOREIGN KEY (game_show_id) REFERENCES game_shows(game_show_id)
-					ON DELETE CASCADE
+					ON DELETE CASCADE,
+				was_medically_evacuated BOOLEAN DEFAULT FALSE,
+				eliminated_on_round INTEGER DEFAULT -1
 				)",
 				&[]
 			).await
@@ -146,7 +148,9 @@ impl GameShowRepository
 					id: Some(row.get(0)),
 					name: row.get(1),
 					id_showseason: None,
-					nickname: None
+					nickname: None,
+					round_number: -1,
+					was_medically_evacuated: false
 				};
 
 				return Ok(contestant);
@@ -177,7 +181,7 @@ impl GameShowRepository
 			.query("SELECT contestant_id, name FROM contestants", &[]).await
 			.map_err(|e: tokio_postgres::Error| e.to_string()) ?
 			.iter()
-			.map(|row: &tokio_postgres::Row| Contestant { id: Some(row.get(0)), name: row.get(1), id_showseason: None, nickname: None })
+			.map(|row: &tokio_postgres::Row| Contestant { id: Some(row.get(0)), name: row.get(1), id_showseason: None, nickname: None, round_number: -1, was_medically_evacuated: false })
 			.collect::<Vec<Contestant>>();
 
 		return Ok(users);
@@ -189,6 +193,30 @@ impl GameShowRepository
 			.execute(
 				"INSERT INTO game_show_contestants (contestant_id, game_show_id, nickname) VALUES ($1, $2, $3)",
 				&[&contestant_id, &game_show_id, &nickname]
+			).await
+			.map_err(|e: tokio_postgres::Error| e.to_string())?;
+
+		return Ok(());
+	}
+
+	pub async fn eliminate_contestant_from_show(&self, contestant_id: i32, game_show_id: i32, round_number: i32) -> Result<(), String>
+	{
+		self.connector.storage
+			.execute(
+				"UPDATE game_show_contestants SET eliminated_on_round = $1 WHERE contestant_id = $2 AND game_show_id = $3",
+				&[&round_number, &contestant_id, &game_show_id]
+			).await
+			.map_err(|e: tokio_postgres::Error| e.to_string())?;
+
+		return Ok(());
+	}
+
+	pub async fn medically_evacuate_contestant_from_show(&self, contestant_id: i32, game_show_id: i32) -> Result<(), String>
+	{
+		self.connector.storage
+			.execute(
+				"UPDATE game_show_contestants SET was_medically_evacuated = TRUE WHERE contestant_id = $1 AND game_show_id = $2",
+				&[&contestant_id, &game_show_id]
 			).await
 			.map_err(|e: tokio_postgres::Error| e.to_string())?;
 

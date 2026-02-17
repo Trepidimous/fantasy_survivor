@@ -252,87 +252,167 @@ fn build_showseason_mangement(
 				</select>
 			</div>
 
-			<input placeholder="Full Name of Contestant"
-				value={contestant_system.contestant_state.name.clone()}
-				oninput={Callback::from(
-				{
-					let contestant_state_clone = contestant_system.contestant_state.clone();
-					move |e: InputEvent|
+				<div class="mb-4">
+				<input placeholder="Full Name of Contestant"
+					value={contestant_system.contestant_state.name.clone()}
+					oninput={Callback::from(
 					{
-						let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+						let contestant_state_clone = contestant_system.contestant_state.clone();
+						move |e: InputEvent|
+						{
+							let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
 
-						let edited_contestant = ContestantState::new(
-							contestant_state_clone.id,
-							input.value(),
-							None
-						);
+							let edited_contestant = ContestantState::new(
+								contestant_state_clone.id,
+								input.value(),
+								None
+							);
 
-						contestant_state_clone.set(edited_contestant);
+							contestant_state_clone.set(edited_contestant);
+						}
+					})}
+					class="border rounded px-4 py-2 mr-2"
+				/>
+
+				<button
+					onclick=
+					{
+						contestant_system.create_contestant.clone()
 					}
-				})}
-				class="border rounded px-4 py-2 mr-2"
-			/>
-
-			<button
-				onclick=
-				{
-					contestant_system.create_contestant.clone()
-				}
-				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-				{
-					"Create Contestant"
-				}
-			</button>
-
-			<button
-				onclick=
-				{
-					contestant_system.select_contestant.clone()
-				}
-				class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-				{
-					"Select Contestant"
-				}
-			</button>
-
-			<button
-				onclick = 
-				{
-					contestant_system.enroll_contestant_onto_show.clone()
-					.reform(
+					class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
 					{
-						//logger::logger::log("Enrol Req con.id>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
+						"Create Contestant"
+					}
+				</button>
 
-						let contestant_state_to_send = ContestantState::new(
-							contestant_system.contestant_state.id,
-							contestant_system.contestant_state.name.clone(),
-							gameshow_system.gameshow_state.id,
-						);
+				<button
+					onclick=
+					{
+						contestant_system.select_contestant.clone()
+					}
+					class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+					{
+						"Select Contestant"
+					}
+				</button>
 
-						//logger::logger::log("Enrol Req 222 (con.id)>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
+				<button
+					onclick = 
+					{
+						contestant_system.enroll_contestant_onto_show.clone()
+						.reform(
+						{
+							//logger::logger::log("Enrol Req con.id>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
 
-						move |_| contestant_state_to_send.clone()
-					})				
-				}
+							let contestant_state_to_send = ContestantState::new(
+								contestant_system.contestant_state.id,
+								contestant_system.contestant_state.name.clone(),
+								gameshow_system.gameshow_state.id,
+							);
 
-				class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-				{
-					"Enroll Contestant onto Show"
-				}
-			</button>
+							//logger::logger::log("Enrol Req 222 (con.id)>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
 
-			<button
-				onclick={contestant_system.delete_contestant.clone().reform(
-				{
-					let contestant_state_clone = contestant_system.contestant_state.clone();
-					move |_| contestant_state_clone.name.clone()
-				})}
+							move |_| contestant_state_to_send.clone()
+						})				
+					}
 
-				class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-				{
-					"Delete Contestant"
-				}
-			</button>
+					class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+					{
+						"Enroll Contestant onto Show"
+					}
+				</button>
+
+				<button
+					onclick={contestant_system.delete_contestant.clone().reform(
+					{
+						let contestant_state_clone = contestant_system.contestant_state.clone();
+						move |_| contestant_state_clone.name.clone()
+					})}
+
+					class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+					{
+						"Delete Contestant"
+					}
+				</button>
+			</div>
+
+			<div class="mb-4">
+				<input placeholder="Round Number"
+					value={contestant_system.contestant_state.round_number.unwrap_or(0).to_string()}
+					oninput={Callback::from(
+					{
+						let contestant_state_clone = contestant_system.contestant_state.clone();
+						move |e: InputEvent|
+						{
+							let input = e.target_dyn_into::<web_sys::HtmlInputElement>().unwrap();
+
+							let mut edited_contestant = ContestantState::new(
+								contestant_state_clone.id,
+								contestant_state_clone.name.clone(),
+								contestant_state_clone.id_showseason
+							);
+
+							edited_contestant.round_number = Some(input.value().parse::<i32>().unwrap_or(0));
+
+							contestant_state_clone.set(edited_contestant);
+						}
+					})}
+					class="border rounded px-4 py-2 mr-2"
+				/>
+
+				<button
+					onclick = 
+					{
+						contestant_system.eliminate_contestant_from_show.clone()
+						.reform(
+						{
+							//logger::logger::log("Enrol Req con.id>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
+
+							let mut contestant_state_to_send = ContestantState::new(
+								contestant_system.contestant_state.id,
+								contestant_system.contestant_state.name.clone(),
+								gameshow_system.gameshow_state.id);
+
+							contestant_state_to_send.round_number = contestant_system.contestant_state.round_number;
+							contestant_state_to_send.was_medically_evacuated = Some(false);
+
+							//logger::logger::log("Enrol Req 222 (con.id)>>>".to_string() + contestant_system.contestant_state.id.unwrap_or(-1).to_string().as_str());
+
+							move |_| contestant_state_to_send.clone()
+						})				
+					}
+
+					class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+					{
+						"🧯 Snuff Torch 🧯"
+					}
+				</button>
+
+				<button
+					onclick = 
+					{
+						contestant_system.medevac_contestant_from_show.clone()
+						.reform(
+						{
+							let mut contestant_state_to_send = ContestantState::new(
+								contestant_system.contestant_state.id,
+								contestant_system.contestant_state.name.clone(),
+								gameshow_system.gameshow_state.id);
+
+							contestant_state_to_send.round_number = contestant_system.contestant_state.round_number;
+							contestant_state_to_send.was_medically_evacuated = Some(true);
+
+							move |_| contestant_state_to_send.clone()
+						})
+					}
+
+					class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+					{
+						"⛑️"
+					}
+				</button>
+
+			</div>
 
 		</>
 	}

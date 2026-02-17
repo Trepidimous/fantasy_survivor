@@ -23,7 +23,9 @@ pub struct Contestant
 	pub id: Option<i32>,
 	pub name: String,
 	pub id_showseason: Option<i32>,
-	pub nickname: Option<String>
+	pub nickname: Option<String>,
+	pub round_number: i32,
+	pub was_medically_evacuated: bool
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -93,6 +95,22 @@ impl GameShowManager
 	pub async fn enter_contestant_onto_show(&self, contestant_id: i32, game_show_id: i32, nickname: String) -> Result<(), String>
 	{
 		return self.repo.enter_contestant_onto_show(contestant_id, game_show_id, nickname).await;
+	}
+
+	pub async fn eliminiate_contestant_from_show(&self, contestant_id: i32, game_show_id: i32, round_number : i32) -> Result<(), String>
+	{
+		return self.repo.eliminate_contestant_from_show(contestant_id, game_show_id, round_number).await;
+	}
+
+	pub async fn medically_evacuate_contestant_from_show(&self, contestant_id: i32, game_show_id: i32, round_number : i32) -> Result<(), String>
+	{
+		let elimination_result = self.repo.eliminate_contestant_from_show(contestant_id, game_show_id, round_number).await;
+		if elimination_result.is_err()
+		{
+			return Err(elimination_result.err().unwrap_or("Unable to Eliminate Candidate".to_string()));
+		}
+
+		return self.repo.medically_evacuate_contestant_from_show(contestant_id, game_show_id).await;
 	}
 
 	pub async fn create_league(&self, league: &League) -> Result<(), String>

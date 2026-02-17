@@ -11,7 +11,9 @@ pub struct ContestantState
 {
 	pub name: String,
 	pub id: Option<i32>,
-	pub id_showseason: Option<i32>
+	pub id_showseason: Option<i32>,
+	pub round_number : Option<i32>,
+	pub was_medically_evacuated: Option<bool>
 }
 
 impl ContestantState
@@ -22,7 +24,9 @@ impl ContestantState
 		{
 			name : name_in,
 			id : id_in,
-			id_showseason : id_showseason_in
+			id_showseason : id_showseason_in,
+			round_number: None,
+			was_medically_evacuated: None
 		}
 	}
 }
@@ -31,10 +35,11 @@ impl ContestantState
 {
 	pub fn to_string(&self) -> String
 	{
-		return format!("ContestantState {{ id: {:?}, name: {}, id_showseason: {:?} }}",
+		return format!("ContestantState {{ id: {:?}, name: {}, id_showseason: {:?} }}, round_number: {:?}",
 			self.id,
 			self.name,
-			self.id_showseason);
+			self.id_showseason,
+			self.round_number);
 	}
 }
 
@@ -47,12 +52,17 @@ pub fn create_contestant(contestant_state: &UseStateHandle<ContestantState>,
 		let message: UseStateHandle<String> = message.clone();
 		Callback::from(move |_|
 		{
-			let contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
+			let mut contestant_state: UseStateHandle<ContestantState> = contestant_state.clone();
 			let message: UseStateHandle<String> = message.clone();
 
 			spawn_local(async move
 			{
-				let contestant_data: serde_json::Value = serde_json::json!({ "name": contestant_state.name });
+				let contestant_data: serde_json::Value = serde_json::json!({ 
+					"name": contestant_state.name,
+					"round_number": contestant_state.round_number,
+					"was_medically_evacuated": contestant_state.was_medically_evacuated
+				});
+
 				let url:&str = concat!(PLATFORM_URL!(), "/contestants");
 				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
 					.header("Content-Type", "application/json")
@@ -175,7 +185,9 @@ pub fn enroll_contestant_onto_show(
 					"name": incoming_state.name,
 					"id": incoming_state.id,
 					"id_showseason": incoming_state.id_showseason,
-					"nickname": "" 
+					"nickname": "",
+					"round_number": incoming_state.round_number,
+					"was_medically_evacuated": incoming_state.was_medically_evacuated
 				});
 				let url:&str = concat!(PLATFORM_URL!(), "/contestants/enroll");
 				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
@@ -197,6 +209,86 @@ pub fn enroll_contestant_onto_show(
 	};
 }
 
+pub fn eliminiate_contestant_from_show(message: &UseStateHandle<String>) -> Callback<ContestantState>
+{
+	return
+	{
+		let message: UseStateHandle<String> = message.clone();
+		Callback::from(move |incoming_state: ContestantState|
+		{
+			logger::logger::log("Eliminating >>>".to_string() + incoming_state.to_string().as_str());
+			let message: UseStateHandle<String> = message.clone();
+
+			spawn_local(async move
+			{
+				let contestant_data: serde_json::Value = serde_json::json!({
+					"name": incoming_state.name,
+					"id": incoming_state.id,
+					"id_showseason": incoming_state.id_showseason,
+					"nickname": "",
+					"round_number": incoming_state.round_number,
+					"was_medically_evacuated": incoming_state.was_medically_evacuated
+				});
+				let url:&str = concat!(PLATFORM_URL!(), "/contestants/elim");
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
+					.header("Content-Type", "application/json")
+					.body(contestant_data.to_string())
+					.send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set(format!("The Tribe Has Spoken 💨. [{}]", incoming_state.to_string()).into());
+					}
+
+					_ => message.set("Failed to eliminate contestant from show".into()),
+				}
+			});
+		})
+	};
+}
+
+fn medevac_contestant(message: &UseStateHandle<String>) -> Callback<ContestantState>
+{
+	return
+	{
+		let message: UseStateHandle<String> = message.clone();
+		Callback::from(move |incoming_state: ContestantState|
+		{
+
+			logger::logger::log("MedEvacing >>>".to_string() + incoming_state.to_string().as_str());
+			let message: UseStateHandle<String> = message.clone();
+
+			spawn_local(async move
+			{
+				let contestant_data: serde_json::Value = serde_json::json!({
+					"name": incoming_state.name,
+					"id": incoming_state.id,
+					"id_showseason": incoming_state.id_showseason,
+					"nickname": "",
+					"eliminated_on_round": incoming_state.round_number
+				});
+				let url:&str = concat!(PLATFORM_URL!(), "/contestants/medevac");
+				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
+					.header("Content-Type", "application/json")
+					.body(contestant_data.to_string())
+					.send().await;
+
+				match response
+				{
+					Ok(resp) if resp.ok() =>
+					{
+						message.set(format!("Contestant medevaced successfully. [{}]", incoming_state.to_string()).into());
+					}
+
+					_ => message.set("Failed to medevac contestant from show".into()),
+				}
+			});
+		})
+	};
+}
+
 #[derive(Clone)]
 pub struct ContestantSystem
 {
@@ -204,18 +296,23 @@ pub struct ContestantSystem
 	pub create_contestant: yew::Callback<yew::MouseEvent>,
 	pub select_contestant: yew::Callback<yew::MouseEvent>,
 	pub delete_contestant: Callback<String>,
-	pub enroll_contestant_onto_show: Callback<ContestantState>
+	pub enroll_contestant_onto_show: Callback<ContestantState>,
+	pub eliminate_contestant_from_show: Callback<ContestantState>,
+	pub medevac_contestant_from_show: Callback<ContestantState>
 }
 
 #[hook]
 pub fn use_compile_contestant_system(message: UseStateHandle<String>) -> ContestantSystem
 {
-	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None, id_showseason: None });
+	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None, id_showseason: None, round_number : Some(-1), was_medically_evacuated: Some(false) });
 
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
 	let select_contestant : yew::Callback<yew::MouseEvent> = select_contestant_by_name(&contestant_state, &message);
 	let delete_contestant : Callback<String> = delete_contestant(&contestant_state, &message);
 	let enroll_contestant_onto_show : Callback<ContestantState> = enroll_contestant_onto_show(&message);
+	let eliminate_contestant_from_show : Callback<ContestantState> = eliminiate_contestant_from_show(&message);
+	let medevac_contestant_from_show : Callback<ContestantState> = medevac_contestant(&message);
 
-	return ContestantSystem { contestant_state, create_contestant, select_contestant, delete_contestant, enroll_contestant_onto_show };
+	return ContestantSystem { contestant_state, create_contestant, select_contestant, delete_contestant,
+		enroll_contestant_onto_show, eliminate_contestant_from_show, medevac_contestant_from_show };
 }
