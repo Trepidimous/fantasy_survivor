@@ -246,6 +246,7 @@ fn create_contestant_preflight(
 }
 
 #[options("/api/contestants/<name>")]
+#[allow(unused_variables)]
 async fn delete_contestant_preflight(name: &str) -> Result<(), String>
 {
 	return Ok(());
