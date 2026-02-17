@@ -25,8 +25,8 @@ impl ContestantState
 			name : name_in,
 			id : id_in,
 			id_showseason : id_showseason_in,
-			round_number: None,
-			was_medically_evacuated: None
+			round_number: Some(-1),
+			was_medically_evacuated: Some(false)
 		}
 	}
 }
@@ -267,7 +267,8 @@ fn medevac_contestant(message: &UseStateHandle<String>) -> Callback<ContestantSt
 					"id": incoming_state.id,
 					"id_showseason": incoming_state.id_showseason,
 					"nickname": "",
-					"eliminated_on_round": incoming_state.round_number
+					"round_number": incoming_state.round_number,
+					"was_medically_evacuated": incoming_state.was_medically_evacuated
 				});
 				let url:&str = concat!(PLATFORM_URL!(), "/contestants/medevac");
 				let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(url)
