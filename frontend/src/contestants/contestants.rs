@@ -1,12 +1,13 @@
 use yew::prelude::*;
 use gloo::net::http::Request;
+use serde::{ Deserialize, Serialize };
 use wasm_bindgen_futures::spawn_local;
 
 use crate::web_server::PLATFORM_URL;
 
 use crate::logger;
 
-#[derive(Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct ContestantState
 {
 	pub name: String,
@@ -179,14 +180,17 @@ fn delete_contestant(contestant_state: &UseStateHandle<ContestantState>,
 	};
 }
 
-fn fetch_contestants_on_show(message: &UseStateHandle<String>) -> Callback<i32>
+fn fetch_contestants_on_show(contestants: &UseStateHandle<Vec<ContestantState>>,
+	message: &UseStateHandle<String>) -> Callback<i32>
 {
 	return
 	{
 		let message: UseStateHandle<String> = message.clone();
+		let contestants: UseStateHandle<Vec<ContestantState>> = contestants.clone();
 		Callback::from(move |game_show_id: i32|
 		{
 			let message: UseStateHandle<String> = message.clone();
+			let contestants: UseStateHandle<Vec<ContestantState>> = contestants.clone();
 
 			spawn_local(async move
 			{
@@ -197,9 +201,13 @@ fn fetch_contestants_on_show(message: &UseStateHandle<String>) -> Callback<i32>
 				{
 					Ok(resp) if resp.ok() =>
 					{
-						if let Ok(json) = resp.json::<serde_json::Value>().await
+						let unpacked_response = resp.json::<Vec<ContestantState>>().await;
+						if let Ok(json) = unpacked_response
 						{
-							message.set(format!("Fetched contestants on show successfully. ShowID[{}], Response: {}", game_show_id, json.to_string()));
+							let fetched_contestants: Vec<ContestantState> = json;
+							message.set(format!("Fetched contestants on show successfully. ShowID[{}], NumContestants: {}", game_show_id, fetched_contestants.len()));
+
+							contestants.set(fetched_contestants);
 						}
 					}
 
@@ -323,23 +331,26 @@ pub struct ContestantSystem
 	pub fetch_contestants_on_show : Callback<i32>,
 	pub enroll_contestant_onto_show: Callback<ContestantState>,
 	pub eliminate_contestant_from_show: Callback<ContestantState>,
-	pub medevac_contestant_from_show: Callback<ContestantState>
+	pub medevac_contestant_from_show: Callback<ContestantState>,
+	pub contestants_on_show : UseStateHandle<Vec<ContestantState>>
 }
 
 #[hook]
 pub fn use_compile_contestant_system(message: UseStateHandle<String>) -> ContestantSystem
 {
 	let contestant_state : UseStateHandle<ContestantState> = use_state(|| ContestantState { name: "".to_string(), id: None, id_showseason: None, round_number : Some(-1), was_medically_evacuated: Some(false) });
+	let contestants_on_show : UseStateHandle<Vec<ContestantState>> = use_state(|| Vec::new());
 
 	let create_contestant : yew::Callback<yew::MouseEvent> = create_contestant(&contestant_state, &message);
 	let select_contestant : yew::Callback<yew::MouseEvent> = select_contestant_by_name(&contestant_state, &message);
 	let delete_contestant : Callback<String> = delete_contestant(&contestant_state, &message);
-	let fetch_contestants_on_show : Callback<i32> = fetch_contestants_on_show(&message);
+	let fetch_contestants_on_show : Callback<i32> = fetch_contestants_on_show(&contestants_on_show, &message);
 	let enroll_contestant_onto_show : Callback<ContestantState> = enroll_contestant_onto_show(&message);
 	let eliminate_contestant_from_show : Callback<ContestantState> = eliminiate_contestant_from_show(&message);
 	let medevac_contestant_from_show : Callback<ContestantState> = medevac_contestant(&message);
 
 	return ContestantSystem { contestant_state, create_contestant, select_contestant, delete_contestant,
 		fetch_contestants_on_show,
-		enroll_contestant_onto_show, eliminate_contestant_from_show, medevac_contestant_from_show };
+		enroll_contestant_onto_show, eliminate_contestant_from_show, medevac_contestant_from_show,
+		contestants_on_show };
 }
