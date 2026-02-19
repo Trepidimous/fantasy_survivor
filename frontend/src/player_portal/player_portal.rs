@@ -6,7 +6,6 @@ use crate::gameshows::gameshows::*;
 use crate::contestants::contestants::*;
 use crate::logger;
 
-
 // Testing - To be replaced with login screen //
 const player_id : i32 = 1;
 const league_id : i32 = 1;
@@ -16,13 +15,17 @@ pub fn build_player_portal_page(
 	message: &UseStateHandle<String>,
 	user_system : &UserSystem,
 	gameshow_system : &GameShowSystem,
-	contestant_system : &ContestantSystem
+	contestant_system : &ContestantSystem,
+	dragged_index: &UseStateHandle<Option<usize>>,
+	ranked_list: &UseStateHandle<Vec<ContestantState>>,
 ) -> Html
 {
+
 	html!
 	{
 		<body class="bg-[#121212]  min-h-screen">
 			<div class="container mx-auto p-4">
+
 				<h1 class="text-4xl font-bold text-[#FF8C00] mb-4">{ "Survivor Fantasy League" }</h1>
 
 				<button
@@ -36,30 +39,62 @@ pub fn build_player_portal_page(
 					<p class="text-green-500 mt-2">{ &**message }</p>
 				}
 
-				<ul class="list-disc pl-5">
+				<ul class="space-y-2">
 				{
-					for (*contestant_system.contestants_on_show).iter().map(|contestant|
+					for (*ranked_list).iter().enumerate().map(|(index, contestant)|
+					{
+						let ondragstart =
 						{
-							let contestant_id = contestant.id.unwrap_or(-1);
-							html!
+							let dragged_index = dragged_index.clone();
+							Callback::from(move |_| dragged_index.set(Some(index)))
+						};
+
+						let ondragover = Callback::from(|e: DragEvent| e.prevent_default());
+
+						let ondrop =
+						{
+							let dragged_index = dragged_index.clone();
+							let ranked_list = ranked_list.clone();
+							Callback::from(move |e: DragEvent|
 							{
-								<li class="mb-2">
-								<span class="font-semibold text-[#4a90e2]">{ format!("ID: {}, Name: {} ", contestant_id, contestant.name) }</span>
+								e.prevent_default();
+								if let Some(from_idx) = *dragged_index
+								{
+									let mut new_vec = (*ranked_list).clone();
+									// Manual reorder logic
+									let item = new_vec.remove(from_idx);
+									new_vec.insert(index, item);
+									ranked_list.set(new_vec);
+								}
+								dragged_index.set(None);
+							})
+						};
 
-								<button
-									onclick={gameshow_system.enter_user_into_league.clone().reform(move |_| (contestant_id, league_id) )}
-									class="ml-4 bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded">
-									{ "Contestant" }
-								</button>
+						html!
+						{
+							<li
+								{ondragstart} {ondragover} {ondrop} draggable="true"
+								class={classes!(
+										"flex", "items-center", "p-4", "mb-2", "rounded-lg", "cursor-grab", 
+										"border", "transition-all", "group",
+										"w-[250px]",
+										{ "bg-[#1e1e1e] border-gray-800" },
+										"hover:border-[#4a90e2]"
+								)}
+							>
 
-								</li>
-							}
+								<div class="flex-grow text-center">
+										<span class="text-white font-semibold text-lg">{ &contestant.name }</span>
+								</div>
+
+								<div class="text-gray-600 group-hover:text-[#4a90e2] font-mono">
+										{"⠿"}
+								</div>
+							</li>
 						}
-					)
+					})
 				}
 				</ul>
-
-
 			</div>
 		</body>
 	}

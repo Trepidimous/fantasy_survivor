@@ -42,10 +42,23 @@ fn app() -> Html
 		let gameshow_system: GameShowSystem = gameshow_system.clone();
 		let contestant_system: ContestantSystem = contestant_system.clone();
 
+		let dragged_index = use_state(|| None::<usize>);
+
+		let ranked_contestants = use_state(|| Vec::<ContestantState>::new());
+
+		// Effect: When the system fetches new contestants, update our local ranking list
+		{
+			let ranked_contestants = ranked_contestants.clone();
+			let system_contestants = contestant_system.contestants_on_show.clone();
+			use_effect_with(system_contestants, move |sys_c| {
+					ranked_contestants.set((**sys_c).clone());
+			});
+		}
+
 		move | routes: Route | match routes
 		{
 			Route::GameMasterPortal => gamemaster_portal::gamemaster_portal::build_gamemaster_portal_page(&message, &user_system, &gameshow_system, &contestant_system),
-			Route::PlayerPortal => player_portal::player_portal::build_player_portal_page(&message, &user_system, &gameshow_system, &contestant_system)
+			Route::PlayerPortal => player_portal::player_portal::build_player_portal_page(&message, &user_system, &gameshow_system, &contestant_system, &dragged_index, &ranked_contestants)
 		}
 	};
 
