@@ -51,7 +51,7 @@ async fn rocket() -> _
 									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant, fetch_contestants_on_show,
 									enroll_contestant, eliminate_contestant, medevac_contestant,
 									gameshow_preflight, gameshow_preflight_for_delete, create_contestant_preflight, delete_contestant_preflight,
-									enroll_contestant_preflight, add_user_to_league_preflight,
+									enroll_contestant_preflight, add_user_to_league_preflight, create_league_preflight,
 									collect_leagues, create_league, delete_league, add_user_to_league, remove_user_from_league])
 		.attach(cors)
 }
@@ -270,6 +270,12 @@ async fn enroll_contestant_preflight() -> Result<(), String>
 #[options("/api/leagues?<user_id>&<league_id>")]
 #[allow(unused_variables)]
 async fn add_user_to_league_preflight(user_id : i32, league_id: i32) -> Result<(), String>
+{
+	return Ok(());
+}
+
+#[options("/api/leagues")]
+async fn create_league_preflight() -> Result<(), String>
 {
 	return Ok(());
 }
