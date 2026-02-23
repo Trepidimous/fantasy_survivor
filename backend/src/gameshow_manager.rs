@@ -144,4 +144,9 @@ impl GameShowManager
 		return self.repo.fetch_contestants_on_show(game_show_id).await;
 	}
 
+	pub async fn set_league_pick(&self, league_id: i32, user_id: i32, round_number: i32, contestant_id: i32, rank_pick: i32) -> Result<(), String>
+	{
+		return self.league_repository.set_league_pick(league_id, user_id, round_number, contestant_id, rank_pick).await;
+	}
+
 }

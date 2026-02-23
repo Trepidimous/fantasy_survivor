@@ -1,9 +1,8 @@
 use yew::prelude::*;
-
-use crate::users::users::UserState;
 use crate::users::users::*;
 use crate::gameshows::gameshows::*;
 use crate::contestants::contestants::*;
+use crate::leagues::leagues::*;
 use crate::logger;
 
 // Testing - To be replaced with login screen //
@@ -13,13 +12,14 @@ const game_show_id : i32 = 1;
 
 pub fn build_player_portal_page(
 	message: &UseStateHandle<String>,
-	user_system : &UserSystem,
-	gameshow_system : &GameShowSystem,
 	contestant_system : &ContestantSystem,
 	dragged_index: &UseStateHandle<Option<usize>>,
 	ranked_list: &UseStateHandle<Vec<ContestantState>>,
+	league_system: &LeagueSystem
 ) -> Html
 {
+
+	let ranked_list_for_submit: UseStateHandle<Vec<ContestantState>> = (*ranked_list).clone();
 
 	html!
 	{
@@ -95,6 +95,15 @@ pub fn build_player_portal_page(
 					})
 				}
 				</ul>
+
+				<div class="mt-6">
+					<button
+						onclick={league_system.set_picks.reform(move |_| (league_id, player_id, 1, ranked_list_for_submit[0].id.unwrap_or_default(), 1))}
+						class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+						{ "Submit Picks" }
+					</button>
+				</div>
+
 			</div>
 		</body>
 	}

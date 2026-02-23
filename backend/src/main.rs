@@ -51,8 +51,9 @@ async fn rocket() -> _
 									create_contestant, select_contestant_by_name, collect_contestants, delete_contestant, fetch_contestants_on_show,
 									enroll_contestant, eliminate_contestant, medevac_contestant,
 									gameshow_preflight, gameshow_preflight_for_delete, create_contestant_preflight, delete_contestant_preflight,
-									enroll_contestant_preflight, add_user_to_league_preflight, create_league_preflight,
-									collect_leagues, create_league, delete_league, add_user_to_league, remove_user_from_league])
+									set_league_pick_preflight, enroll_contestant_preflight, add_user_to_league_preflight, create_league_preflight,
+									collect_leagues, create_league, delete_league, add_user_to_league, remove_user_from_league,
+									set_league_pick])
 		.attach(cors)
 }
 
@@ -229,6 +230,12 @@ async fn remove_user_from_league(manager : &State<GameShowManager>, user_id: i32
 	return manager.remove_user_from_league(user_id, league_id).await.map_err(|e: String| e);
 }
 
+#[post("/api/leagues/set_pick?<league_id>&<user_id>&<round_number>&<contestant_id>&<rank_pick>")]
+async fn set_league_pick(manager : &State<GameShowManager>, league_id: i32, user_id: i32, round_number: i32, contestant_id: i32, rank_pick: i32) -> Result<(), String>
+{
+	return manager.set_league_pick(league_id, user_id, round_number, contestant_id, rank_pick).await.map_err(|e: String| e);
+}
+
 ///// These are just fake endpoints added in to stop server warnings //////
 
 // Browsers automatically send out an options request before sending POST requests with Json payloads.
@@ -276,6 +283,13 @@ async fn add_user_to_league_preflight(user_id : i32, league_id: i32) -> Result<(
 
 #[options("/api/leagues")]
 async fn create_league_preflight() -> Result<(), String>
+{
+	return Ok(());
+}
+
+#[options("/api/leagues/set_pick?<league_id>&<user_id>&<round_number>&<contestant_id>&<rank_pick>")]
+#[allow(unused_variables)]
+async fn set_league_pick_preflight(manager : &State<GameShowManager>, league_id: i32, user_id: i32, round_number: i32, contestant_id: i32, rank_pick: i32) -> Result<(), String>
 {
 	return Ok(());
 }
