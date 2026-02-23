@@ -45,10 +45,10 @@ pub struct RoundPickState
 pub struct LeagueSystem
 {
 	pub picks: UseStateHandle<Vec<RoundPickState>>,
-	pub set_picks : Callback<(i32, i32, i32, i32, i32)>
+	pub set_pick : Callback<(i32, i32, i32, i32, i32)>
 }
 
-pub fn set_picks(message: &UseStateHandle<String>) -> Callback<(i32, i32, i32, i32, i32)>
+pub fn set_pick(message: &UseStateHandle<String>) -> Callback<(i32, i32, i32, i32, i32)>
 {
 	return
 	{
@@ -84,7 +84,7 @@ pub fn use_create_league_system(message: UseStateHandle<String>) -> LeagueSystem
 {
 	let picks: UseStateHandle<Vec<RoundPickState>> = use_state(Vec::new);
 
-	let set_picks : yew::Callback<(i32, i32, i32, i32, i32)> = set_picks(&message);
+	let set_pick : yew::Callback<(i32, i32, i32, i32, i32)> = set_pick(&message);
 
-	return LeagueSystem { picks, set_picks };
+	return LeagueSystem { picks, set_pick };
 }
