@@ -6,6 +6,8 @@ use wasm_bindgen_futures::spawn_local;
 use crate::web_server::PLATFORM_URL;
 use crate::logger;
 
+const player_id : i32 = 1;
+const league_id : i32 = 1;
 
 #[derive(Clone, PartialEq)]
 pub struct ContestantPickState
@@ -44,8 +46,55 @@ pub struct RoundPickState
 #[derive(Clone)]
 pub struct LeagueSystem
 {
-	pub picks: UseStateHandle<Vec<RoundPickState>>,
-	pub set_pick : Callback<(i32, i32, i32, i32, i32)>
+	pub picks_state: UseStateHandle<Vec<RoundPickState>>,
+	pub submit_picks : yew::Callback<yew::MouseEvent>
+}
+
+pub fn submit_picks(message: &UseStateHandle<String>, picks: &UseStateHandle<Vec<RoundPickState>>) -> yew::Callback<yew::MouseEvent>
+{
+	return
+	{
+		let picks_state: UseStateHandle<Vec<RoundPickState>> = picks.clone();
+		let message: UseStateHandle<String> = message.clone();
+
+		Callback::from(move |_|
+		{
+			let picks_state: UseStateHandle<Vec<RoundPickState>> = picks_state.clone();
+			let message: UseStateHandle<String> = message.clone();
+
+			spawn_local(async move
+			{
+
+				logger::logger::log(format!("submit_picks >>> Submitting picks for league [{}]", league_id.to_string()));
+
+				for (round_pick_state) in (picks_state).iter()
+				{
+					for (contestant_pick) in round_pick_state.picks.iter()
+					{
+						logger::logger::log(format!("Submitting pick for contestant [{}] with rank [{}]", contestant_pick.contestant_id, contestant_pick.rank_pick));
+
+						let url:String = format!(concat!(PLATFORM_URL!(), "/leagues/set_pick?user_id={}&league_id={}&round_number={}&contestant_id={}&rank_pick={}"), player_id, league_id, round_pick_state.round_number, contestant_pick.contestant_id, contestant_pick.rank_pick);
+						let response: Result<gloo::net::http::Response, gloo::net::Error> = Request::post(&url)
+							.header("Content-Type", "application/json")
+							.send().await;
+
+						match response
+						{
+							Ok(resp) if resp.ok() =>
+							{
+								message.set(format!("Pick [{}] entered successfully onto league [{}]", contestant_pick.rank_pick, league_id.to_string()).into());
+							}
+
+							_ => message.set(format!("Failed to enter pick [{}] onto league [{}]", contestant_pick.rank_pick, league_id.to_string()).into()),
+						}
+					}
+				}
+
+
+
+			});
+		})
+	};
 }
 
 pub fn set_pick(message: &UseStateHandle<String>) -> Callback<(i32, i32, i32, i32, i32)>
@@ -82,9 +131,9 @@ pub fn set_pick(message: &UseStateHandle<String>) -> Callback<(i32, i32, i32, i3
 #[hook]
 pub fn use_create_league_system(message: UseStateHandle<String>) -> LeagueSystem
 {
-	let picks: UseStateHandle<Vec<RoundPickState>> = use_state(Vec::new);
+	let picks_state: UseStateHandle<Vec<RoundPickState>> = use_state(Vec::new);
 
-	let set_pick : yew::Callback<(i32, i32, i32, i32, i32)> = set_pick(&message);
+	let submit_picks: yew::Callback<yew::MouseEvent> = submit_picks(&message, &picks_state);
 
-	return LeagueSystem { picks, set_pick };
+	return LeagueSystem { picks_state, submit_picks };
 }

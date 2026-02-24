@@ -98,7 +98,7 @@ pub fn build_player_portal_page(
 
 				<div class="mt-6">
 					<button
-						onclick={league_system.set_pick.reform(move |_| (league_id, player_id, 1, ranked_list_for_submit[0].id.unwrap_or_default(), 1))}
+						onclick={league_system.submit_picks.clone()}
 						class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
 						{ "Submit Picks" }
 					</button>
