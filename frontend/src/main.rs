@@ -27,6 +27,8 @@ enum Route
 	GameMasterPortal,
 	#[at("/player-portal")]
 	PlayerPortal,
+    #[at("/")]
+    Home
 }
 
 #[function_component(App)]
@@ -63,7 +65,24 @@ fn app() -> Html
 		move | routes: Route | match routes
 		{
 			Route::GameMasterPortal => gamemaster_portal::gamemaster_portal::build_gamemaster_portal_page(&message, &user_system, &gameshow_system, &contestant_system),
-			Route::PlayerPortal => player_portal::player_portal::build_player_portal_page(&message, &contestant_system, &dragged_index, &ranked_contestants, &league_system)
+			Route::PlayerPortal => player_portal::player_portal::build_player_portal_page(&message, &contestant_system, &dragged_index, &ranked_contestants, &league_system),
+
+            Route::Home => {
+                let msg = message.clone();
+                html! {
+                    <div class="p-4">
+                        <h1 class="text-2xl font-bold mb-2">{"This is the root URL."}</h1>
+                        <div class="mt-4">
+                            <a href="/gamemaster-portal" class="text-blue-500 hover:underline mr-4">
+                                {"Go to Game Master Portal"}
+                            </a>
+                            <a href="/player-portal" class="text-blue-500 hover:underline">
+                                {"Go to Player Portal"}
+                            </a>
+                        </div>
+                    </div>
+                }
+            }
 		}
 	};
 
