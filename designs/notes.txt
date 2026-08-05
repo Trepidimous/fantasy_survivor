@@ -11,6 +11,6 @@ WHERE gs.show_name = 'Jeopardy';
 
 
 {
-    "name":"NewUser",
-    "email":"YouTwoUber@mail.com"
+    "name":"username1",
+    "email":"name123@gmail.com"
 }

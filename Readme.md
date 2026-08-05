@@ -109,20 +109,25 @@ For example, cd to: C:\Users\your_name\Desktop\Dev\fantasy_survivor\frontend
    To exit psql, type: `\q`  
     b. Or manually connect with DBeaver and enter database connection credentials.    
 
-4. Run our backend server (locally)  
-    a. Open a command prompt from this repo's directory. Then cd to `/backend` directory.  
+4. Run the backend server (locally)  
+    a. Open a command prompt from this repo's directory. cd to `/backend` directory.  
     b. run `cargo build`  
     c. run `cargo run`  
-    d. Verify that we can create, read, update, or delete records in the database by using DBeaver.  
 
 5. Build front-end by:  
-    a. Open a command prompt from this repo's directory. Then cd to `/frontend` directory  
+    a. Open a command prompt from this repo's directory. cd to `/frontend` directory  
     b. run `cargo build --target wasm32-unknown-unknown`
 
 6. Start front-end with:  
     a. run `trunk serve`
 
-7. Go to URL: http://127.0.0.1:8080/
+7. Go to URL: http://127.0.0.1:8080/gamemaster-portal
+And http://127.0.0.1:8080/player-portal
+
+The root URL for this application is: http://127.0.0.1:8080  
+However, this shows and does nothing.  
+
+8. Review records in the database by connecting to it with DBeaver or another database GUI.  
 
 <h3 id="troubleshooting" style="color:rgb(242, 242, 242);">Troubleshooting</h3>
 
@@ -140,5 +145,5 @@ To read the values of users in Postman, run:
   GET
   http://127.0.0.1:8000/api/users
 
-This is not the ideal way to get information from a database.  
+This is NOT how you should get information from a database.  
 You should use a GUI like DBeaver or PGAdmin.  
